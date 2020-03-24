@@ -1,38 +1,60 @@
-.App {
-  text-align: center;
+
+body {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+#root {
+  max-width: 680px;
+  border: 1px solid #dcd9d9;
+  height: 100%;
+  max-height: 450px;
+  margin: 40px;
+  overflow: hidden;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+@media only screen and (max-width: 680px) {
+  #root {
+    margin: 0px;
+    border-left: none;
+    border-right: none;
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+
+.area {
+  fill: url(#temperature-gradient);
+  stroke-width: 05px;
+  z-index: -1;
+  clip-path: url(#clip);
 }
 
-.App-link {
-  color: #61dafb;
+.line {
+  clip-path: url(#clip);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.dots {
+  clip-path: url(#clip);
+}
+
+.xAxis .domain {
+  color: rgba(144, 143, 143, 0.54);
+}
+
+.xAxis .tick line {
+  color: rgba(144, 143, 143, 0.54);
+}
+
+.yAxis .domain {
+  display: none;
+}
+
+.yAxisGrid {
+  color: #f3f3f3;
+  shape-rendering: crispEdges;
+}
+
+.yAxisGrid path {
+  stroke-width: 0;
 }
