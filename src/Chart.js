@@ -1,27 +1,36 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { scaleDiscontinuous, discontinuityRange, discontinuitySkipWeekends } from 'd3fc-discontinuous-scale';
 import moment, { utc } from 'moment';
+import cloneDeep from 'lodash.clonedeep';
 
 const utcOffset = -5;
 const margin = 40;
 
-const getLastFiveDaysDomain = () => {
-  const getDaysToSubtract = () => {
-    const dayOfWeekToday = moment().day();
-    switch (dayOfWeekToday) {
-      case 0:
-        return 2
-      case 6:
-        return 1
-      default:
-        return 0;
+const getDayOfWeek = (date) => {
+  return moment(date).day();
+}
 
-    }
+const getDaysToSubtract = () => {
+  const dayOfWeekToday = getDayOfWeek();
+  
+  switch (dayOfWeekToday) {
+    case 0:
+      return 2
+    case 6:
+      return 1
+    default:
+      return 0;
+
   }
+}
+
+const getLastFiveDaysDomain = () => {
+
 
   const daysToSubtract = getDaysToSubtract();
-  return [moment().add(utcOffset, 'hours').subtract(5 + daysToSubtract, 'days'), moment().add(utcOffset, 'hours').subtract(daysToSubtract, 'days')];
+  return [moment().add(utcOffset, 'hours').subtract(4 + daysToSubtract, 'days'), moment().add(utcOffset -1, 'hours').subtract(daysToSubtract, 'days')];
 }
 
 const getDaysToAdd = (date) => {
@@ -36,16 +45,16 @@ const getDaysToAdd = (date) => {
   }
 }
 
-const getMonthsDomain = (months) => {
+const getMonthsDomain = (months, data) => {
   const monthAgo = moment().subtract(months, 'months');
-  return [monthAgo.add(getDaysToAdd(monthAgo), 'days'), moment()]
+  return [monthAgo.add(getDaysToAdd(monthAgo), 'days').subtract(1, 'days').toDate(), moment().toDate()]
 }
 
 
 
 const yearToDateDomain = () => {
   const startOfYearDate = moment().startOf('year')
-  return [startOfYearDate.add(getDaysToAdd(startOfYearDate), 'days').add(utcOffset, 'hours'), moment().add(utcOffset, 'hours')]
+  return [startOfYearDate.add(getDaysToAdd(startOfYearDate), 'days').toDate(), moment().toDate()]
 }
 
 const getYearsDomain = (years) => {
@@ -59,7 +68,10 @@ const getAxisXInfo = (tab) => {
   const tabs = {
     0: {
       domain: [new Date(2000, 0, 1, 8 + utcOffset), new Date(2000, 0, 1, 20 + utcOffset)],
-      ticks: d3.timeHour.every(3),
+      ticks: 3,
+      tickFormat: d => {
+        return  d.format("hh:mm A");
+      },
       data: [
         {
           x: new Date(2000, 0, 1, 8 + utcOffset),
@@ -86,175 +98,45 @@ const getAxisXInfo = (tab) => {
     },
     1: {
       domain: getLastFiveDaysDomain(),
-      ticks: d3.utcDay.every(1),
-      data: [
-
-        {
-          x: moment('2020-03-18').add(utcOffset, 'hours'),
-          y: 80,
-        },
-        {
-          x: moment('2020-03-19').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2020-03-20').add(utcOffset, 'hours'),
-          y: 120,
-        },
-
-      ]
+      ticks: 5,
+      tickFormat: d => {
+        return d.format("MMM DD");
+      },
     },
     2: {
       domain: getMonthsDomain(1),
-      ticks: 6,
-      data: [
-
-        {
-          x: moment('2020-02-23').add(utcOffset, 'hours'),
-          y: 80,
-        },
-
-        {
-          x: moment('2020-02-26').add(utcOffset, 'hours'),
-          y: 120,
-        },
-        {
-          x: moment('2020-03-19').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2020-03-22').add(utcOffset, 'hours'),
-          y: 20,
-        },
-        {
-          x: moment('2020-03-23').add(utcOffset, 'hours'),
-          y: 20,
-        },
-      ]
+      ticks:3,
+      tickFormat: d => {
+        return d.format("M-D");
+      },
     },
     3: {
       domain: getMonthsDomain(6),
       ticks: 3,
-      data: [
-        {
-          x: moment('2019-12-23').add(utcOffset, 'hours'),
-          y: 130,
-        },
-
-        {
-          x: moment('2020-02-23').add(utcOffset, 'hours'),
-          y: 80,
-        },
-        {
-          x: moment('2020-03-19').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2020-03-22').add(utcOffset, 'hours'),
-          y: 20,
-        },
-        {
-          x: moment('2020-03-23').add(utcOffset, 'hours'),
-          y: 20,
-        },
-      ]
+      tickFormat: d => {
+        return d.format("MMM YYYY");
+      },
     },
     4: {
       domain: yearToDateDomain(),
-      ticks: date.getMonth(),
-      data: [
-        {
-          x: moment('2020-01-01').add(utcOffset, 'hours'),
-          y: 130,
-        },
-
-        {
-          x: moment('2020-02-23').add(utcOffset, 'hours'),
-          y: 80,
-        },
-        {
-          x: moment('2020-03-19').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2020-03-22').add(utcOffset, 'hours'),
-          y: 20,
-        },
-        {
-          x: moment('2020-03-23').add(utcOffset, 'hours'),
-          y: 20,
-        },
-      ],
+      ticks: 3,
+      tickFormat: d => {
+        return d.format("M-D");
+      },
     },
     5: {
       domain: getYearsDomain(1),
-      ticks: 3,
-      data: [
-        {
-          x: moment('2020-01-01').add(utcOffset, 'hours'),
-          y: 130,
-        },
-
-        {
-          x: moment('2020-02-23').add(utcOffset, 'hours'),
-          y: 80,
-        },
-        {
-          x: moment('2020-03-19').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2020-03-22').add(utcOffset, 'hours'),
-          y: 20,
-        },
-        {
-          x: moment('2020-03-23').add(utcOffset, 'hours'),
-          y: 20,
-        },
-      ],
+      ticks: 5,
+      tickFormat: d => {
+        return d.format("YYYY");
+      },
     },
     6: {
       domain: getYearsDomain(5),
       ticks: 5,
-      data: [
-        {
-          x: moment('2015-04-01').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2017-01-01').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2017-02-01').add(utcOffset, 'hours'),
-          y: 140,
-        },
-        {
-          x: moment('2017-03-01').add(utcOffset, 'hours'),
-          y: 80,
-        },
-        {
-          x: moment('2018-04-01').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2019-01-01').add(utcOffset, 'hours'),
-          y: 130,
-        },
-
-        {
-          x: moment('2020-01-23').add(utcOffset, 'hours'),
-          y: 80,
-        },
-        {
-          x: moment('2020-02-19').add(utcOffset, 'hours'),
-          y: 180,
-        },
-        {
-          x: moment('2020-03-22').add(utcOffset, 'hours'),
-          y: 20,
-        },
-      ],
+      tickFormat: d => {
+        return d.format("YYYY");
+      },
     },
 
   }
@@ -272,91 +154,234 @@ const addChart = ({
   linearGradient,
   clippedPath,
   yAxisGrid,
+  fiveYearData,
+  isLoading,
 }) => {
+
+ 
+
+ 
+
   clippedPath
     .attr("width", width)
     .attr("height", height);
 
+    if(isLoading) {
+      return;
+    }
 
 
   d3.selectAll("circle").remove();
   d3.selectAll(".line").remove();
   d3.selectAll(".area").remove();
 
-  const data = getAxisXInfo(selectedTab).data
-  console.log('data', data)
+
+
+
+  // let data = getAxisXInfo(selectedTab).data
+  let data = fiveYearData;
+
+  if(selectedTab === 0) {
+    data = data.filter(date => {
+      if(!date.minute || !date.y) {
+        return false
+      }
+      return parseInt(date.minute.slice(-2)) % 5 === 0
+    })
+  }
+
+  if(selectedTab === 1) {
+    data = data.filter(date => {
+      if(!date.minute || !date.y) {
+        return false;
+      }
+      return parseInt(date.minute.slice(-2)) % 30 === 0
+    })
+  }
+
+   if(selectedTab == 6) {
+    const mostRecenDayOfWeek = data[data.length-1].x.day();
+    data = data.filter(date => date.x.day() === mostRecenDayOfWeek);
+  }
+  
+  const yTicks = Math.round(height / 50);
 
   const maxY = Math.max.apply(Math, data.map(function (o) { return o.y; }))
   const minY = Math.min.apply(Math, data.map(function (o) { return o.y; }))
-  console.log('maxY', maxY)
-  const domain = getAxisXInfo(selectedTab).domain
+ 
+  let domain = getAxisXInfo(selectedTab).domain
 
-  var xScale = d3.scaleUtc()
+  if(fiveYearData.length && fiveYearData.length > 1) {
+    domain = [fiveYearData[0].x, fiveYearData[fiveYearData.length-1].x]
+  }
+
+
+  let xScale = scaleDiscontinuous(d3.scaleUtc())
     .domain(domain)
-    .nice()
-    .range([0, width]);
+    .range([0, width])
+
+
+    if( (data &&  data.length) && (selectedTab === 0 || selectedTab === 1 || selectedTab === 2 || selectedTab === 3 || selectedTab === 4 || selectedTab === 5 || selectedTab === 6)) {
+    
+      const tradingDatesArray = data.map(d => d.x);
+      let offDayArr = []
+      let monthDomain = [tradingDatesArray[0].clone(), tradingDatesArray[tradingDatesArray.length-1].clone()]
+      tradingDatesArray.forEach((data, i) => {
+        if(tradingDatesArray[i+1]) {
+          let diff;
+          if(selectedTab === 1) {
+            diff  = tradingDatesArray[i].diff(tradingDatesArray[i+1], 'minutes');
+          } else {
+            diff  = tradingDatesArray[i].diff(tradingDatesArray[i+1], 'days');
+          }
+          
+          if(selectedTab !== 1 & diff !== -1) {
+
+            offDayArr.push([tradingDatesArray[i].clone().add(1, 'days'), tradingDatesArray[i+1].clone()])
+          }
+
+          if(selectedTab === 1 & diff !== -30) {
+
+            offDayArr.push([tradingDatesArray[i].clone().add(30, 'minutes'), tradingDatesArray[i+1].clone()])
+          }
+          
+        }
+      })
+
+  xScale = scaleDiscontinuous(d3.scaleUtc())
+
+  .discontinuityProvider(discontinuityRange(...offDayArr))
+      .domain(domain)
+    .range([0, width])
+
+    }
+
+    
 
   const yScale = d3.scaleLinear()
     .range([height, 0])
     .domain([minY, maxY])
+    .nice();
 
-  yAxisGrid
-    .call(d3.axisLeft(yScale)
-      .ticks(Math.round(height / 50))
-      .tickSize(-width)
-      .tickFormat("")
+    
 
+ 
+
+  // var yGridTBottomTick = d3.select(".yAxisGrid .tick")
+  //   .style("display", "none")
+
+  const yTicksFunc = () => {
+    const ticks = d3.axisLeft(yScale)
+      .ticks(yTicks)
+      return ticks
+  }
+
+let tickValues = [];
+
+  yAxis
+  .attr('class', 'yAxis')
+    .call(yTicksFunc()
+      .tickSize(0)
     )
 
-  var yGridTBottomTick = d3.select(".yAxisGrid .tick")
-    .style("display", "none")
+  const addTicks = (_tickValues) => {
+    if (tickValues[0] > minY) {
+      const interval = tickValues[1] - tickValues[0]
+      _tickValues.unshift(tickValues[0] - interval)
+    }
+    return _tickValues
+  }
 
-  var line = d3.line()
+
+
+    yAxisGrid
+    .call(yTicksFunc()
+      .tickSize(-width)
+    ).lower()
+
+
+  let threeTicks = []
+
+  const returnStartOfMonth = (data) => {
+    switch(selectedTab) {
+      case 3:
+      case 4:
+        return data.clone().startOf('month');
+      case 5:
+      case 6:
+        return data.clone().startOf('year');
+    default:
+      return data;
+    }
+  }
+
+  if (fiveYearData.length && (selectedTab===1 || selectedTab===2 || selectedTab===3 || selectedTab===4 || selectedTab===5 || selectedTab===6)) {
+    const _fiveYearData = fiveYearData.filter(d => d.x)
+    const interval = fiveYearData.length/getAxisXInfo(selectedTab).ticks
+
+    for(let i=interval; i<_fiveYearData.length; i+=interval) {
+      threeTicks.push(returnStartOfMonth(_fiveYearData[Math.round(i)].x))
+    }
+
+    threeTicks.push(returnStartOfMonth(_fiveYearData[_fiveYearData.length-1].x))
+  }
+
+  if(fiveYearData.length && (selectedTab===0 )) {
+    const createOneDaytickValues = () => {
+      let todaysDate = moment(fiveYearData[0].x.clone()).format('YYYY-MM-DD')
+      todaysDate = '2020-04-03'
+      return (
+        [
+          moment(todaysDate).clone().add(12, 'hours'),
+          moment(todaysDate).clone().add(16, 'hours'),
+        ]
+      )
+    }
+
+    threeTicks = createOneDaytickValues();
+  }
+
+  
+
+    xAxis
+    .attr('transform', `translate(0, ${height})`)
+    .attr('class', 'xAxis')
+    .call(d3.axisBottom(xScale)
+      .tickValues(threeTicks)
+      .tickSizeOuter(0)
+      .tickSizeInner(8)
+      .tickFormat(getAxisXInfo(selectedTab).tickFormat)
+    );
+
+
+    var line = d3.line()
     .x(function (d, i) {
       return xScale(d.x);
     })
-    .y(function (d) { return yScale(d.y); }) // set the y values for the line generator 
+    .y(function (d) {
+      return yScale(d.y); }) // set the y values for the line generator 
 
-  svg.append("path")
-    .datum(getAxisXInfo(selectedTab).data) // 10. Binds data to the line 
+  svg
+  .append("path")
+    .datum(data) // 10. Binds data to the line 
     .attr("class", "line") // Assign a class for styling 
     .attr("d", line) // 11. Calls the line generator
     .attr('fill', 'none')
     .attr('stroke', 'rgb(230, 74, 25)')
-    .attr('stroke-width', '2.5px')
-    .raise();
-
-  yAxis
-  .attr('class', 'yAxis')
-    .call(d3.axisLeft(yScale)
-      .ticks(Math.round(height / 50))
-      .tickSize(0)
-    )
-
-  xAxis
-    .attr('transform', `translate(0, ${height})`)
-    .attr('class', 'xAxis')
-    .call(d3.axisBottom(xScale)
-      .ticks(getAxisXInfo(selectedTab).ticks)
-      // .tickSize(10)
-      .tickSizeOuter(0)
-      .tickSizeInner(8)
-    );
+    .attr('stroke-width', '1.5px')
+    .raise()
 
   const circle = svg.selectAll()
-    .data(getAxisXInfo(selectedTab).data)
+    .data(data)
 
-  circle
-    .enter()
-    .append("circle")
-    .attr("class", "dots")
-    .attr("r", 2.5)
-    .attr('fill', 'red')
-    .attr("cx", function (d) { return xScale(d.x); })
-    .attr("cy", function (d) { return yScale(d.y); });
-
-
-
+  // circle
+  //   .enter()
+  //   .append("circle")
+  //   .attr("class", "dots")
+  //   .attr("r", 1.5)
+  //   .attr('fill', 'red')
+  //   .attr("cx", function (d) { return xScale(d.x); })
+  //   .attr("cy", function (d) { return yScale(d.y); });
 
   linearGradient
     .attr("x1", 0).attr("y1", yScale(maxY))
@@ -368,14 +393,14 @@ const addChart = ({
     .y1(function (d) { return yScale(d.y); });
 
   svg.append("path")
-    .data([getAxisXInfo(selectedTab).data])
+    .data([data])
     .attr("class", "area")
     .attr("d", areaData)
     .lower();
 
 }
 
-const Chart = ({ yDomain, selectedTab }) => {
+const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
   const svg = useRef();
   const chart = useRef();
   const yAxis = useRef();
@@ -465,9 +490,11 @@ const Chart = ({ yDomain, selectedTab }) => {
       linearGradient: linearGradient.current,
       area: area.current,
       clippedPath: clippedPath.current,
-      yAxisGrid: yAxisGrid.current
+      yAxisGrid: yAxisGrid.current,
+      fiveYearData,
+      isLoading,
     })
-  }, [yDomain, height, width, selectedTab])
+  }, [yDomain, height, width, selectedTab, fiveYearData, isLoading])
 
 
   return (
