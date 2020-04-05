@@ -153,6 +153,7 @@ const addChart = ({
       }
       return parseInt(date.minute.slice(-2)) % 5 === 0
     })
+    console.log('data', data)
   }
 
   if(selectedTab === 1) {
@@ -176,15 +177,15 @@ const addChart = ({
  
   let domain = [0, 0]
 
-  if(fiveYearData.length && fiveYearData.length > 1) {
-    domain = [fiveYearData[0].x, fiveYearData[fiveYearData.length-1].x]
+  if(data.length && data.length > 1) {
+    domain = [data[0].x, data[data.length-1].x]
   }
 
   let xScale = scaleDiscontinuous(d3.scaleUtc())
     .domain(domain)
     .range([0, width])
 
-    if( (data &&  data.length) && (selectedTab === 0 || selectedTab === 1 || selectedTab === 2 || selectedTab === 3 || selectedTab === 4 || selectedTab === 5 || selectedTab === 6)) {
+    if( (data &&  data.length) && (selectedTab === 7 || selectedTab === 1 || selectedTab === 2 || selectedTab === 3 || selectedTab === 4 || selectedTab === 5 || selectedTab === 6)) {
       const tradingDatesArray = data.map(d => d.x);
       let offDayArr = []
       tradingDatesArray.forEach((data, i) => {
@@ -196,7 +197,7 @@ const addChart = ({
             diff  = tradingDatesArray[i].diff(tradingDatesArray[i+1], 'days');
           }
           
-          if(selectedTab !== 1 & diff !== -1) {
+          if(selectedTab !==1 & diff !== -1) {
 
             offDayArr.push([tradingDatesArray[i].clone().add(1, 'days'), tradingDatesArray[i+1].clone()])
           }
@@ -257,7 +258,7 @@ const addChart = ({
     }
   }
 
-  if (fiveYearData.length && (selectedTab===1 || selectedTab===2 || selectedTab===3 || selectedTab===4 || selectedTab===5 || selectedTab===6)) {
+  if (fiveYearData.length && selectedTab !== 0) {
     const _fiveYearData = fiveYearData.filter(d => d.x)
     const interval = fiveYearData.length/getAxisXInfo(selectedTab).ticks
 
@@ -270,18 +271,18 @@ const addChart = ({
 
   if(fiveYearData.length && (selectedTab===0 )) {
     const createOneDaytickValues = () => {
-      let todaysDate = moment(fiveYearData[0].x.clone()).format('YYYY-MM-DD')
-      // console.log('todaysDate', todaysDate)
-      // let todaysDate = '2020-04-03'
+      let todaysDate = moment(fiveYearData[0].x.clone()).format('YYYY-MM-DD');
       return (
         [
-          moment(todaysDate).clone().add(12, 'hours'),
-          moment(todaysDate).clone().add(16, 'hours'),
+          moment(todaysDate).add(12, 'hours'),
+          moment(todaysDate).add(15, 'hours'),
+          // moment(todaysDate).add(20, 'hours'),
         ]
       )
     }
 
     threeTicks = createOneDaytickValues();
+    // threeTicks = [];
   }
 
     xAxis
@@ -343,13 +344,23 @@ const addChart = ({
 
     mouseContainer
         .attr("width", width)
-        .attr("height", height)
+        .attr("height", height + 100)
         .style("fill", "none")
         .style("pointer-events", "all")
         .raise()
         .on('mousemove', function() {
+          console.log('d3.mouse(this)[0]', d3.mouse(this))
+          console.log('')
+          // console.log('scale invert', moment(xScale.invert(d3.mouse(this)[0])).clone().subtract(1, 'days'))
+          const date = new Date(xScale.invert(d3.mouse(this)[0]))
+          console.log('date', date)
+          const invertAmount = xScale(date)
+          console.log('invertAmount', invertAmount)
+          let translateX = Math.round(invertAmount);
+          console.log('domain', domain)
+
           bisectLine
-        .attr("transform", `translate(${xScale(xScale.invert(d3.mouse(this)[0]))}, 0)`)
+        .attr("transform", `translate(${translateX}, 0)`)
         // .raise()
           
         })
@@ -425,6 +436,7 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
 
     bisectLine.current = svg.current
     .append("line")
+    .attr('class', 'bisectLine')
     .attr("style", "stroke:#999; stroke-width:0.5; stroke-dasharray: 5 3;")
     .attr("x1", 0)
     .attr("x2", 0);
