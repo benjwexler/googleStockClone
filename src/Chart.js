@@ -22,13 +22,10 @@ const getDaysToSubtract = () => {
       return 1
     default:
       return 0;
-
   }
 }
 
 const getLastFiveDaysDomain = () => {
-
-
   const daysToSubtract = getDaysToSubtract();
   return [moment().add(utcOffset, 'hours').subtract(4 + daysToSubtract, 'days'), moment().add(utcOffset -1, 'hours').subtract(daysToSubtract, 'days')];
 }
@@ -50,8 +47,6 @@ const getMonthsDomain = (months, data) => {
   return [monthAgo.add(getDaysToAdd(monthAgo), 'days').subtract(1, 'days').toDate(), moment().toDate()]
 }
 
-
-
 const yearToDateDomain = () => {
   const startOfYearDate = moment().startOf('year')
   return [startOfYearDate.add(getDaysToAdd(startOfYearDate), 'days').toDate(), moment().toDate()]
@@ -72,29 +67,6 @@ const getAxisXInfo = (tab) => {
       tickFormat: d => {
         return  d.format("hh:mm A");
       },
-      data: [
-        {
-          x: new Date(2000, 0, 1, 8 + utcOffset),
-          y: 20,
-        },
-        {
-          x: new Date(2000, 0, 1, 9.5 + utcOffset),
-          y: 150,
-        },
-        {
-          x: new Date(2000, 0, 1, 11 + utcOffset),
-          y: 80,
-        },
-        {
-          x: new Date(2000, 0, 1, 14 + utcOffset),
-          y: 150,
-        },
-        {
-          x: new Date(2000, 0, 1, 17 + utcOffset),
-          y: 150,
-        },
-
-      ]
     },
     1: {
       domain: getLastFiveDaysDomain(),
@@ -156,12 +128,10 @@ const addChart = ({
   yAxisGrid,
   fiveYearData,
   isLoading,
+  mouseContainer,
+  mousePositionX,
+  bisectLine
 }) => {
-
- 
-
- 
-
   clippedPath
     .attr("width", width)
     .attr("height", height);
@@ -170,15 +140,10 @@ const addChart = ({
       return;
     }
 
-
   d3.selectAll("circle").remove();
   d3.selectAll(".line").remove();
   d3.selectAll(".area").remove();
 
-
-
-
-  // let data = getAxisXInfo(selectedTab).data
   let data = fiveYearData;
 
   if(selectedTab === 0) {
@@ -209,23 +174,19 @@ const addChart = ({
   const maxY = Math.max.apply(Math, data.map(function (o) { return o.y; }))
   const minY = Math.min.apply(Math, data.map(function (o) { return o.y; }))
  
-  let domain = getAxisXInfo(selectedTab).domain
+  let domain = [0, 0]
 
   if(fiveYearData.length && fiveYearData.length > 1) {
     domain = [fiveYearData[0].x, fiveYearData[fiveYearData.length-1].x]
   }
 
-
   let xScale = scaleDiscontinuous(d3.scaleUtc())
     .domain(domain)
     .range([0, width])
 
-
     if( (data &&  data.length) && (selectedTab === 0 || selectedTab === 1 || selectedTab === 2 || selectedTab === 3 || selectedTab === 4 || selectedTab === 5 || selectedTab === 6)) {
-    
       const tradingDatesArray = data.map(d => d.x);
       let offDayArr = []
-      let monthDomain = [tradingDatesArray[0].clone(), tradingDatesArray[tradingDatesArray.length-1].clone()]
       tradingDatesArray.forEach((data, i) => {
         if(tradingDatesArray[i+1]) {
           let diff;
@@ -256,16 +217,10 @@ const addChart = ({
 
     }
 
-    
-
   const yScale = d3.scaleLinear()
     .range([height, 0])
     .domain([minY, maxY])
     .nice();
-
-    
-
- 
 
   // var yGridTBottomTick = d3.select(".yAxisGrid .tick")
   //   .style("display", "none")
@@ -276,29 +231,16 @@ const addChart = ({
       return ticks
   }
 
-let tickValues = [];
-
   yAxis
   .attr('class', 'yAxis')
     .call(yTicksFunc()
       .tickSize(0)
     )
 
-  const addTicks = (_tickValues) => {
-    if (tickValues[0] > minY) {
-      const interval = tickValues[1] - tickValues[0]
-      _tickValues.unshift(tickValues[0] - interval)
-    }
-    return _tickValues
-  }
-
-
-
     yAxisGrid
     .call(yTicksFunc()
       .tickSize(-width)
     ).lower()
-
 
   let threeTicks = []
 
@@ -329,7 +271,8 @@ let tickValues = [];
   if(fiveYearData.length && (selectedTab===0 )) {
     const createOneDaytickValues = () => {
       let todaysDate = moment(fiveYearData[0].x.clone()).format('YYYY-MM-DD')
-      todaysDate = '2020-04-03'
+      // console.log('todaysDate', todaysDate)
+      // let todaysDate = '2020-04-03'
       return (
         [
           moment(todaysDate).clone().add(12, 'hours'),
@@ -341,8 +284,6 @@ let tickValues = [];
     threeTicks = createOneDaytickValues();
   }
 
-  
-
     xAxis
     .attr('transform', `translate(0, ${height})`)
     .attr('class', 'xAxis')
@@ -352,7 +293,6 @@ let tickValues = [];
       .tickSizeInner(8)
       .tickFormat(getAxisXInfo(selectedTab).tickFormat)
     );
-
 
     var line = d3.line()
     .x(function (d, i) {
@@ -371,8 +311,8 @@ let tickValues = [];
     .attr('stroke-width', '1.5px')
     .raise()
 
-  const circle = svg.selectAll()
-    .data(data)
+  // const circle = svg.selectAll()
+  //   .data(data)
 
   // circle
   //   .enter()
@@ -398,6 +338,21 @@ let tickValues = [];
     .attr("d", areaData)
     .lower();
 
+    bisectLine
+        .attr("y2", height)
+
+    mouseContainer
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all")
+        .raise()
+        .on('mousemove', function() {
+          bisectLine
+        .attr("transform", `translate(${xScale(xScale.invert(d3.mouse(this)[0]))}, 0)`)
+        // .raise()
+          
+        })
 }
 
 const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
@@ -409,6 +364,9 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
   const area = useRef();
   const clippedPath = useRef();
   const yAxisGrid = useRef();
+  const mouseContainer = useRef();
+  const mousePositionX = useRef();
+  const bisectLine = useRef();
 
   const [height, setHeight] = useState(600);
   const [width, setWidth] = useState(600);
@@ -419,7 +377,6 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
     setHeight(height)
     setWidth(width)
   }
-
 
   useEffect(() => {
     setDimensions()
@@ -439,7 +396,6 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
       .attr("id", "temperature-gradient")
       .attr("gradientUnits", "userSpaceOnUse")
 
-
     const gradientData = [{ offset: "0%", color: "rgb(255,182,193, .1)" },
     { offset: "50%", color: "white" }]
 
@@ -453,23 +409,35 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
       .attr("offset", gradientData[1].offset)
       .attr("stop-color", gradientData[1].color);
 
-
     area.current = svg.current.append("path");
-
 
     clippedPath.current = svg.current.append("defs").append("clipPath")
       .attr("id", "clip")
       .append("rect")
 
-
     chart.current = svg.current
       .append('g')
       .attr('transform', `translate(${0}, ${0})`)
 
-
     yAxis.current = chart.current.append('g')
     xAxis.current = chart.current.append('g');
     yAxisGrid.current = chart.current.append('g').attr("class", "yAxisGrid");
+
+    bisectLine.current = svg.current
+    .append("line")
+    .attr("style", "stroke:#999; stroke-width:0.5; stroke-dasharray: 5 3;")
+    .attr("x1", 0)
+    .attr("x2", 0);
+
+    mouseContainer.current = svg.current.append("rect")
+    .on('mouseout', function() {
+      bisectLine.current
+      .style("opacity", "0")
+    })
+    .on('mouseover', function() {
+      bisectLine.current
+      .style("opacity", "1")
+    })
 
   }
 
@@ -493,9 +461,11 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
       yAxisGrid: yAxisGrid.current,
       fiveYearData,
       isLoading,
+      mouseContainer: mouseContainer.current,
+      mousePositionX,
+      bisectLine: bisectLine.current,
     })
   }, [yDomain, height, width, selectedTab, fiveYearData, isLoading])
-
 
   return (
     null
