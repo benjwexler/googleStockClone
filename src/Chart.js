@@ -5,36 +5,57 @@ import { scaleDiscontinuous, discontinuityRange, discontinuitySkipWeekends } fro
 import moment, { utc } from 'moment';
 
 const margin = 40;
+// let tooltipWidth = 0
+
+const getTooltipTransformX = (_translateX, _tooltipWidth, _width) => {
+  if ((_translateX - (_tooltipWidth / 2)) < 0) {
+    return 0
+  }
+
+  if ((_translateX) > _width - (_tooltipWidth / 2)) {
+    return _width - _tooltipWidth
+  }
+
+  return _translateX - (_tooltipWidth / 2);
+}
+
 
 const getAxisXInfo = (tab) => {
   const tabs = {
     0: {
       ticks: 3,
-      tickFormat: d => d.format("hh:mm A"),
+      tickFormat: d => d.format("h:mm A"),
+      tooltipFormat: d => d.format("h:mm A"),
     },
     1: {
       ticks: 5,
       tickFormat: d => d.format("MMM DD"),
+      tooltipFormat: d => d.format("ddd, MMM, D h:mm A"),
     },
     2: {
       ticks: 3,
-      tickFormat: d => d.format("M-D"),
+      tickFormat: d => d.format("MMM DD"),
+      tooltipFormat: d => d.format("ddd, MMM, D"),
     },
     3: {
       ticks: 3,
       tickFormat: d => d.format("MMM YYYY"),
+      tooltipFormat: d => d.format("ddd, MMM, D"),
     },
     4: {
       ticks: 3,
       tickFormat: d => d.format("M-D"),
+      tooltipFormat: d => d.format("ddd, MMM, D"),
     },
     5: {
       ticks: 5,
       tickFormat: d => d.format("YYYY"),
+      tooltipFormat: d => d.format("ddd, MMM, D, YYYY"),
     },
     6: {
       ticks: 5,
       tickFormat: d => d.format("YYYY"),
+      tooltipFormat: d => d.format("ddd, MMM, D, YYYY"),
     },
   }
 
@@ -54,17 +75,23 @@ const updateChart = ({
   fiveYearData,
   isLoading,
   mouseContainer,
-  bisectLine
+  bisectLine,
+  tooltip,
+  focusPoint,
 }) => {
   clippedPath
     .attr("width", width)
     .attr("height", height);
 
+  mouseContainer
+    .style("width", `${width}px`)
+    .style("height", `${height + 100}px`);
+
   if (isLoading) {
     return;
   }
 
-  d3.selectAll("circle").remove();
+  // d3.selectAll("circle").remove();
   d3.selectAll(".line").remove();
   d3.selectAll(".area").remove();
 
@@ -98,7 +125,7 @@ const updateChart = ({
   const minY = Math.min.apply(Math, data.map(function (o) { return o.y; }))
 
   if (!data.length || !data.length > 1) {
-    return 
+    return
   }
 
   let domain = [data[0].x, data[data.length - 1].x]
@@ -161,7 +188,7 @@ const updateChart = ({
       .tickSize(-width)
     ).lower()
 
-  let threeTicks = []
+  let ticksArr = []
 
   const returnStartOfMonth = (data) => {
     switch (selectedTab) {
@@ -181,10 +208,10 @@ const updateChart = ({
     const interval = fiveYearData.length / getAxisXInfo(selectedTab).ticks
 
     for (let i = interval; i < _fiveYearData.length; i += interval) {
-      threeTicks.push(returnStartOfMonth(_fiveYearData[Math.round(i)].x))
+      ticksArr.push(returnStartOfMonth(_fiveYearData[Math.round(i)].x))
     }
 
-    threeTicks.push(returnStartOfMonth(_fiveYearData[_fiveYearData.length - 1].x))
+    ticksArr.push(returnStartOfMonth(_fiveYearData[_fiveYearData.length - 1].x))
   }
 
   if (fiveYearData.length && (selectedTab === 0)) {
@@ -198,14 +225,14 @@ const updateChart = ({
       )
     }
 
-    threeTicks = createOneDaytickValues();
+    ticksArr = createOneDaytickValues();
   }
 
   xAxis
     .attr('transform', `translate(0, ${height})`)
     .attr('class', 'xAxis')
     .call(d3.axisBottom(xScale)
-      .tickValues(threeTicks)
+      .tickValues(ticksArr)
       .tickSizeOuter(0)
       .tickSizeInner(8)
       .tickFormat(getAxisXInfo(selectedTab).tickFormat)
@@ -254,24 +281,71 @@ const updateChart = ({
 
   bisectLine
     .attr("y2", height)
+    .raise()
 
   mouseContainer
     .attr("width", width)
     .attr("height", height + 100)
     .style("fill", "none")
     .style("pointer-events", "all")
-    .raise()
+    // .raise()
     .on('mousemove', function () {
-      const date = new Date(xScale.invert(d3.mouse(this)[0]))
+      const mouseX = xScale.invert(d3.mouse(this)[0])
+      const date = new Date(mouseX)
       const invertAmount = xScale(date)
       let translateX = Math.round(invertAmount);
 
+      const bisect = d3.bisector(d => d.x).left
+      const i = bisect(data, mouseX, 1);
+      const d0 = data[i - 1];
+      const d1 = data[i];
+      const d = mouseX - d0.x > d1.x - mouseX ? d1 : d0;
+      // console.log('d', d)
+
+      const point = d
+
+      const price = point.y;
+
       bisectLine
-        .attr("transform", `translate(${translateX}, 0)`)
+        .attr("transform", `translate(${xScale(d.x)}, 0)`)
+        // .attr("transform", `translate(${translateX < width ? xScale(d.x) : width}, 0)`)
+
+
+      const getTooltipTransformY = (yPoint) => {
+        if (yPoint < 20) {
+          return height - 45
+        }
+
+        return - 15;
+
+      }
+
+      tooltip
+        .text(`${price} USD ${getAxisXInfo(selectedTab).tooltipFormat(d.x)}`)
+        .raise()
+       
+      const tooltipWidth = document.querySelector('.tooltip').getBoundingClientRect().width;
+
+  tooltip
+  .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
+
+      focusPoint
+        .attr("transform",
+          "translate(" + xScale(d.x) + "," +
+          yScale(d.y) + ")")
+        .raise();
     })
+
 }
 
-const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
+const Chart = ({
+  yDomain,
+  selectedTab,
+  fiveYearData,
+  isLoading,
+  showTooltip,
+  setShowTooltip,
+}) => {
   const svg = useRef();
   const chart = useRef();
   const yAxis = useRef();
@@ -280,8 +354,11 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
   const area = useRef();
   const clippedPath = useRef();
   const yAxisGrid = useRef();
-  const mouseContainer = useRef();
   const bisectLine = useRef();
+  const tooltipGroup = useRef();
+  const tooltip = useRef();
+  const mouseContainer = useRef();
+  const focusPoint = useRef();
 
   const [height, setHeight] = useState(600);
   const [width, setWidth] = useState(600);
@@ -303,8 +380,15 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
 
 
   const onMount = () => {
-    svg.current = d3.select("#root").append("svg")
-      .attr('transform', `translate(${margin}, ${margin})`)
+    const divContainer = d3.select("#root")
+      .append('div')
+      .style('display', 'flex')
+      .style('height', '100%')
+      .append('div')
+      .attr('class', 'divContainer');
+
+    svg.current = divContainer.append("svg")
+      .attr('transform', `translate(${margin}, ${0})`)
       .attr('overflow', 'visible');
 
     linearGradient.current = svg.current.append("linearGradient")
@@ -346,16 +430,58 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
       .attr("x2", 0)
       .style("opacity", "0");
 
-    mouseContainer.current = svg.current.append("rect")
-      .on('mouseout', function () {
-        bisectLine.current
-          .style("opacity", "0")
-      })
+    tooltipGroup.current = svg.current.append("g");
+
+
+    mouseContainer.current = divContainer
+      .append("div")
+      .attr('class', 'mouseContainer')
+      .style('transform', `translate(${margin}px, ${0}px)`)
       .on('mouseover', function () {
-        bisectLine.current
-          .style("opacity", "1")
+        setShowTooltip(true);
       })
+
+    tooltip.current = mouseContainer.current
+      .append('div')
+      .attr('class', 'tooltip')
+      // .style('width', `${tooltipWidth}px`)
+      .style('opacity', 0)
+
+    focusPoint.current = svg.current
+      .append("circle")
+      .attr("class", "y")
+      .style("fill", "red")
+      .style("stroke", "red")
+      .attr("r", 2.5)
+      .style("opacity", "0");
   }
+
+  useEffect(() => {
+    if (bisectLine.current && tooltip.current && focusPoint.current) {
+      if (showTooltip) {
+        bisectLine.current
+          .style("opacity", "1");
+
+        tooltip.current
+          .style("opacity", "1")
+
+        focusPoint.current
+          .style("opacity", "1")
+
+      } else {
+        bisectLine.current
+          .style("opacity", "0");
+
+        tooltip.current
+          .style("opacity", "0")
+
+        focusPoint.current
+          .style("opacity", "0")
+      }
+    }
+
+
+  }, [showTooltip])
 
   useEffect(() => {
     onMount()
@@ -377,8 +503,12 @@ const Chart = ({ yDomain, selectedTab, fiveYearData, isLoading }) => {
       yAxisGrid: yAxisGrid.current,
       fiveYearData,
       isLoading,
-      mouseContainer: mouseContainer.current,
+      // mouseContainer: mouseContainer.current,
       bisectLine: bisectLine.current,
+      tooltipGroup: tooltipGroup.current,
+      tooltip: tooltip.current,
+      mouseContainer: mouseContainer.current,
+      focusPoint: focusPoint.current,
     })
   }, [yDomain, height, width, selectedTab, fiveYearData, isLoading])
 

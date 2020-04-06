@@ -5,6 +5,15 @@ body {
   margin: 0;
 }
 
+.App {
+  /* margin-bottom: 40px; */
+}
+
+.divContainer {
+  position: relative;
+  margin-top: 40px;
+}
+
 #root {
   max-width: 680px;
   border: 1px solid #dcd9d9;
@@ -57,4 +66,34 @@ body {
 
 .yAxisGrid path {
   stroke-width: 0;
+}
+
+.tooltip {
+  background-color: #fff;
+    font-weight: 400;
+    font-size: 12px;
+    height: 28px;
+    line-height: 28px;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2), 0 1px 1px rgba(0,0,0,.14);
+    z-index: 2;
+    direction: ltr;
+    text-align: center;
+    /* width: 240px; */
+    transition: opacity 150ms;
+    /* margin-left: auto;
+    margin-right: auto; */
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.mouseContainer {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  display: flex;
+}
+
+.y {
+  /* transition: all 50ms; */
 }

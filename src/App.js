@@ -72,7 +72,7 @@ function App() {
 
         setFiveYearData(formattedData)
         } catch(err) {
-          
+          console.log('err', err)
         }
       }
       _fetch();
@@ -83,17 +83,23 @@ function App() {
       setIsLoading(false)
     }, [fiveYearData])
 
+    const [showTooltip, setShowTooltip] = useState(false);
+
     return (
       <ThemeProvider theme={theme}>
         <div className="App">
           <MyAppBar
             selectedTab={selectedTab}
             setSelectedTab={setSelectedTab}
+            showTooltip={showTooltip}
+            setShowTooltip={setShowTooltip}
           />
           <Chart
             selectedTab={selectedTab}
             fiveYearData={fiveYearData}
             isLoading={isLoading}
+            showTooltip={showTooltip}
+            setShowTooltip={setShowTooltip}
           />
         </div>
       </ThemeProvider>
