@@ -308,7 +308,7 @@ const updateChart = ({
 
       bisectLine
         .attr("transform", `translate(${xScale(d.x)}, 0)`)
-        // .attr("transform", `translate(${translateX < width ? xScale(d.x) : width}, 0)`)
+      // .attr("transform", `translate(${translateX < width ? xScale(d.x) : width}, 0)`)
 
 
       const getTooltipTransformY = (yPoint) => {
@@ -323,11 +323,11 @@ const updateChart = ({
       tooltip
         .text(`${price} USD ${getAxisXInfo(selectedTab).tooltipFormat(d.x)}`)
         .raise()
-       
+
       const tooltipWidth = document.querySelector('.tooltip').getBoundingClientRect().width;
 
-  tooltip
-  .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
+      tooltip
+        .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
 
       focusPoint
         .attr("transform",
@@ -380,7 +380,7 @@ const Chart = ({
 
 
   const onMount = () => {
-    const divContainer = d3.select("#root")
+    const divContainer = d3.select("#container")
       .append('div')
       .style('display', 'flex')
       .style('height', '100%')

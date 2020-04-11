@@ -6,6 +6,22 @@ import MyAppBar from './MyAppBar';
 import theme from './theme';
 import axios from 'axios';
 import moment, { utc } from 'moment';
+import Select from 'react-select';
+import stockSymbols from './stockSymbols.json';
+import { stripDiacritics } from './diacritics.js'
+import { createFilter } from './filters';
+import Async, { makeAsyncSelect } from 'react-select/async';
+import WindowedSelect from "react-windowed-select";
+
+console.log('stripDiacritics', stripDiacritics)
+
+const mappedSymbols = stockSymbols.map(symbol => {
+  symbol.value = symbol.symbol;
+  symbol.label = `${symbol.symbol} - ${symbol.name}`
+
+  return symbol
+})
+// .slice(0, 200);
 
 
 const getDuration = (selectedTab) => {
@@ -25,6 +41,7 @@ const getDuration = (selectedTab) => {
 
 function App() {
   const [selectedTab, setSelectedTab] = useState(0);
+  const [stock, setStock] = useState('fb')
   const [fiveYearData, setFiveYearData] = useState([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -39,54 +56,63 @@ function App() {
             minute: day.minute,
           };
         }
-      default: 
-      return (day) => {
-        return {
-          x: moment(day.date),
-          y: day.close,
-        }
+      default:
+        return (day) => {
+          return {
+            x: moment(day.date),
+            y: day.close,
+          }
 
-      }
+        }
     }
   }
 
-    useEffect(() => {
-      const _fetch = async () => {
-        setIsLoading(true);
-        const duration = getDuration(selectedTab)
-        const token = 'Tsk_4f28bfa86e2e4385b069966f7dd179a3'
-        const url = `https://sandbox.iexapis.com/stable/stock/fb/batch?types=quote,chart&range=${duration}&last=10&token=${token}`;
-        
-        
-        try {
+  useEffect(() => {
+    const _fetch = async () => {
+      setIsLoading(true);
+      const duration = getDuration(selectedTab)
+      const token = 'Tsk_4f28bfa86e2e4385b069966f7dd179a3'
+      const url = `https://sandbox.iexapis.com/stable/stock/${stock}/batch?types=quote,chart&range=${duration}&last=10&token=${token}`;
+
+      try {
         const res = await axios.get(url)
-
         const data = res.data.chart;
-
-
-        // const url2 = `https://sandbox.iexapis.com/stable/stock/twtr/chart/${duration}&token=${token}`;
-        // const res2 = await axios.get(url2)
-        // console.log('res2', res2) 
-
         const formattedData = data.map(getFormattedDataAction(selectedTab, data))
-
         setFiveYearData(formattedData)
-        } catch(err) {
-          console.log('err', err)
-        }
+      } catch (err) {
+        console.log('err', err)
       }
-      _fetch();
-    }, [selectedTab])
+    }
+    _fetch();
+  }, [selectedTab, stock])
 
 
-    useEffect(() => {
-      setIsLoading(false)
-    }, [fiveYearData])
+  useEffect(() => {
+    setIsLoading(false)
+  }, [fiveYearData])
 
-    const [showTooltip, setShowTooltip] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const resultLimit = 1000
+  let i = 0
+  return (
 
-    return (
-      <ThemeProvider theme={theme}>
+    <ThemeProvider theme={theme}>
+      <div>
+        <WindowedSelect
+          isClearable
+          filterOption={({ label, data }, query) => {
+            return (
+              label.toUpperCase().indexOf(query.toUpperCase()) >= 0 && i++ < resultLimit
+            )
+          }
+          }
+          options={mappedSymbols}
+          onInputChange={() => { i = 0 }}
+          onChange={(stock) => stock && stock.symbol ? setStock(stock.symbol) : null}
+          className="select"
+        />
+      </div>
+      <div id="container">
         <div className="App">
           <MyAppBar
             selectedTab={selectedTab}
@@ -102,8 +128,11 @@ function App() {
             setShowTooltip={setShowTooltip}
           />
         </div>
-      </ThemeProvider>
-    );
-  }
+      </div>
 
-  export default App;
+    </ThemeProvider>
+
+  );
+}
+
+export default App;
