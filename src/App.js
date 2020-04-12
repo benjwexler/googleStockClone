@@ -13,7 +13,12 @@ import { createFilter } from './filters';
 import Async, { makeAsyncSelect } from 'react-select/async';
 import WindowedSelect from "react-windowed-select";
 
-console.log('stripDiacritics', stripDiacritics)
+const colorGreen = 'rgb(15, 157, 88)';
+
+function formatNumber(num) {
+  if(!num) return num;
+  return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+}
 
 const mappedSymbols = stockSymbols.map(symbol => {
   symbol.value = symbol.symbol;
@@ -21,8 +26,6 @@ const mappedSymbols = stockSymbols.map(symbol => {
 
   return symbol
 })
-// .slice(0, 200);
-
 
 const getDuration = (selectedTab) => {
   const durationInfo = {
@@ -41,9 +44,10 @@ const getDuration = (selectedTab) => {
 
 function App() {
   const [selectedTab, setSelectedTab] = useState(0);
-  const [stock, setStock] = useState('fb')
+  const [stock, setStock] = useState({symbol: 'FB', name: 'Facebook Inc. Class A'})
   const [fiveYearData, setFiveYearData] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [quote, setQuote] = useState({});
 
   const getFormattedDataAction = (_selectedTab, data) => {
     switch (_selectedTab) {
@@ -67,15 +71,21 @@ function App() {
     }
   }
 
+
+  const getPercentageChange = (_latestProce, _previousClose) => {
+    return (((_latestProce/_previousClose) - 1) * 100).toFixed(2)
+  }
   useEffect(() => {
     const _fetch = async () => {
       setIsLoading(true);
       const duration = getDuration(selectedTab)
       const token = 'Tsk_4f28bfa86e2e4385b069966f7dd179a3'
-      const url = `https://sandbox.iexapis.com/stable/stock/${stock}/batch?types=quote,chart&range=${duration}&last=10&token=${token}`;
+      const url = `https://sandbox.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&last=10&token=${token}`;
 
       try {
         const res = await axios.get(url)
+        console.log('res', res.data)
+        setQuote(res.data.quote)
         const data = res.data.chart;
         const formattedData = data.map(getFormattedDataAction(selectedTab, data))
         setFiveYearData(formattedData)
@@ -108,10 +118,18 @@ function App() {
           }
           options={mappedSymbols}
           onInputChange={() => { i = 0 }}
-          onChange={(stock) => stock && stock.symbol ? setStock(stock.symbol) : null}
+          onChange={(stock) => stock && stock.symbol ? setStock(stock) : null}
           className="select"
         />
       </div>
+      <h3 style={{marginLeft: 10}}>{stock.symbol} - {stock.name}</h3>
+      <h2 
+        style={{marginLeft: 10}}
+      >
+        {formatNumber(quote.latestPrice)} 
+        <span style={{fontSize: 16}}> USD</span>
+        <span style={{fontSize: 16, color: quote.latestPrice - quote.previousClose >= 0 ? colorGreen : 'red'}}> {(quote.latestPrice - quote.previousClose).toFixed(2)} ({getPercentageChange(quote.latestPrice, quote.previousClose)}%)</span>
+      </h2>
       <div id="container">
         <div className="App">
           <MyAppBar

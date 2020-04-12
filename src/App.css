@@ -6,9 +6,10 @@ body {
 }
 
 #root {
-  height: 100%;
+  /* height: 100%; */
   max-width: 680px;
   margin: 40px;
+  border: 1px solid #dcd9d9;
 }
 
 .App {
@@ -21,9 +22,9 @@ body {
 }
 
 #container {
-  max-width: 680px;
-  border: 1px solid #dcd9d9;
-  height: 100%;
+  /* max-width: 680px; */
+  /* border: 1px solid #dcd9d9; */
+  /* height: 100%; */
   max-height: 450px;
   /* margin: 40px; */
   overflow: hidden;
@@ -47,6 +48,7 @@ body {
   stroke-width: 05px;
   z-index: -1;
   clip-path: url(#clip);
+  z-index: 99999999;
 }
 
 .line {
@@ -106,4 +108,12 @@ body {
 
 .y {
   /* transition: all 50ms; */
+}
+
+@media only screen and (max-width: 500px) {
+
+.Mui-selected .MuiTab-wrapper {
+  background: #f5f5f5 !important;
+}
+
 }

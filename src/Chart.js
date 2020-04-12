@@ -5,6 +5,10 @@ import { scaleDiscontinuous, discontinuityRange, discontinuitySkipWeekends } fro
 import moment, { utc } from 'moment';
 
 const margin = 40;
+const colorGreen = 'rgb(15, 157, 88)';
+const gradientData = [{ offset: "0%", colorGreen: "rgb(15, 157, 88, .65)", colorRed: "rgb(255,182,193, .65)" },
+    { offset: "50%", color: "rgb(255, 255, 255, 0)" }]
+
 // let tooltipWidth = 0
 
 const getTooltipTransformX = (_translateX, _tooltipWidth, _width) => {
@@ -33,7 +37,7 @@ const getAxisXInfo = (tab) => {
       tooltipFormat: d => d.format("ddd, MMM, D h:mm A"),
     },
     2: {
-      ticks: 3,
+      ticks: 6,
       tickFormat: d => d.format("MMM DD"),
       tooltipFormat: d => d.format("ddd, MMM, D"),
     },
@@ -44,8 +48,8 @@ const getAxisXInfo = (tab) => {
     },
     4: {
       ticks: 3,
-      tickFormat: d => d.format("M-D"),
-      tooltipFormat: d => d.format("ddd, MMM, D"),
+      tickFormat: d => d.format("MMM YYYY"),
+      tooltipFormat: d => d.format("ddd, MMM, D, YYYY"),
     },
     5: {
       ticks: 5,
@@ -78,6 +82,8 @@ const updateChart = ({
   bisectLine,
   tooltip,
   focusPoint,
+  linearGradientStop0,
+  linearGradientStop1,
 }) => {
   clippedPath
     .attr("width", width)
@@ -91,11 +97,14 @@ const updateChart = ({
     return;
   }
 
-  // d3.selectAll("circle").remove();
   d3.selectAll(".line").remove();
   d3.selectAll(".area").remove();
 
   let data = fiveYearData;
+  if (!data.length || !data.length > 1) {
+    return
+  }
+
 
   if (selectedTab === 0) {
     data = data.filter(date => {
@@ -120,6 +129,7 @@ const updateChart = ({
     data = data.filter(date => date.x.day() === mostRecenDayOfWeek);
   }
 
+ 
   const yTicks = Math.round(height / 50);
   const maxY = Math.max.apply(Math, data.map(function (o) { return o.y; }))
   const minY = Math.min.apply(Math, data.map(function (o) { return o.y; }))
@@ -129,6 +139,7 @@ const updateChart = ({
   }
 
   let domain = [data[0].x, data[data.length - 1].x]
+  let isInGreen = data[0].y <= data[data.length - 1].y;
 
   let xScale = scaleDiscontinuous(d3.scaleUtc())
     .domain(domain)
@@ -208,7 +219,7 @@ const updateChart = ({
     const interval = fiveYearData.length / getAxisXInfo(selectedTab).ticks
 
     for (let i = interval; i < _fiveYearData.length; i += interval) {
-      ticksArr.push(returnStartOfMonth(_fiveYearData[Math.round(i)].x))
+      ticksArr.push(returnStartOfMonth(_fiveYearData[Math.floor(i)].x))
     }
 
     ticksArr.push(returnStartOfMonth(_fiveYearData[_fiveYearData.length - 1].x))
@@ -248,59 +259,42 @@ const updateChart = ({
     .attr("class", "line") // Assign a class for styling 
     .attr("d", line) // 11. Calls the line generator
     .attr('fill', 'none')
-    .attr('stroke', 'rgb(230, 74, 25)')
+    .attr('stroke', isInGreen ? colorGreen : 'rgb(230, 74, 25)')
     .attr('stroke-width', '1.5px')
     .raise()
-
-  // const circle = svg.selectAll()
-  //   .data(data)
-
-  // circle
-  //   .enter()
-  //   .append("circle")
-  //   .attr("class", "dots")
-  //   .attr("r", 1.5)
-  //   .attr('fill', 'red')
-  //   .attr("cx", function (d) { return xScale(d.x); })
-  //   .attr("cy", function (d) { return yScale(d.y); });
 
   linearGradient
     .attr("x1", 0).attr("y1", yScale(maxY))
     .attr("x2", 0).attr("y2", yScale(minY))
+    // .raise();
 
   var areaData = d3.area()
     .x(function (d) { return xScale(d.x); })
     .y0(height)
     .y1(function (d) { return yScale(d.y); });
 
-  svg.append("path")
-    .data([data])
-    .attr("class", "area")
-    .attr("d", areaData)
-    .lower();
+ 
 
   bisectLine
     .attr("y2", height)
     .raise()
+
+  
 
   mouseContainer
     .attr("width", width)
     .attr("height", height + 100)
     .style("fill", "none")
     .style("pointer-events", "all")
-    // .raise()
     .on('mousemove', function () {
       const mouseX = xScale.invert(d3.mouse(this)[0])
       const date = new Date(mouseX)
-      const invertAmount = xScale(date)
-      let translateX = Math.round(invertAmount);
 
       const bisect = d3.bisector(d => d.x).left
       const i = bisect(data, mouseX, 1);
       const d0 = data[i - 1];
       const d1 = data[i];
       const d = mouseX - d0.x > d1.x - mouseX ? d1 : d0;
-      // console.log('d', d)
 
       const point = d
 
@@ -308,16 +302,12 @@ const updateChart = ({
 
       bisectLine
         .attr("transform", `translate(${xScale(d.x)}, 0)`)
-      // .attr("transform", `translate(${translateX < width ? xScale(d.x) : width}, 0)`)
-
 
       const getTooltipTransformY = (yPoint) => {
         if (yPoint < 20) {
           return height - 45
         }
-
         return - 15;
-
       }
 
       tooltip
@@ -330,12 +320,29 @@ const updateChart = ({
         .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
 
       focusPoint
+        .style("fill", isInGreen ? colorGreen : "red")
+        .style("stroke", isInGreen ? colorGreen : "red")
         .attr("transform",
-          "translate(" + xScale(d.x) + "," +
-          yScale(d.y) + ")")
+          `translate(${xScale(d.x)},
+          ${yScale(d.y)})`)
         .raise();
     })
 
+    linearGradientStop0
+    .attr("offset", gradientData[0].offset)
+      .attr("stop-color", isInGreen ? gradientData[0].colorGreen : gradientData[0].colorRed)
+      .raise();
+  
+    linearGradientStop1
+      .attr("offset", gradientData[1].offset)
+      .attr("stop-color", gradientData[1].color)
+      .raise();
+
+      svg.append("path")
+      .data([data])
+      .attr("class", "area")
+      .attr("d", areaData)
+      // .lower();
 }
 
 const Chart = ({
@@ -351,6 +358,8 @@ const Chart = ({
   const yAxis = useRef();
   const xAxis = useRef();
   const linearGradient = useRef();
+  const linearGradientStop0 = useRef();
+  const linearGradientStop1 = useRef();
   const area = useRef();
   const clippedPath = useRef();
   const yAxisGrid = useRef();
@@ -365,7 +374,19 @@ const Chart = ({
 
   const setDimensions = () => {
     const height = document.body.clientHeight - 200 > 300 ? 300 : document.body.clientHeight - 200;
-    const width = document.body.clientWidth - 80 > 600 ? 600 : document.body.clientWidth - 80;
+    const getWidth = () => {
+      const clientWidth = document.body.clientWidth;
+      if(clientWidth - 80 > 600) {
+        return 600
+      }
+
+      if(clientWidth < 500) {
+        return clientWidth - 60;
+      }
+
+      return clientWidth - 80
+    }
+    const width = getWidth();
     setHeight(height)
     setWidth(width)
   }
@@ -378,12 +399,11 @@ const Chart = ({
 
   }, [])
 
-
   const onMount = () => {
     const divContainer = d3.select("#container")
       .append('div')
       .style('display', 'flex')
-      .style('height', '100%')
+      .style('min-height', '400px')
       .append('div')
       .attr('class', 'divContainer');
 
@@ -395,18 +415,13 @@ const Chart = ({
       .attr("id", "temperature-gradient")
       .attr("gradientUnits", "userSpaceOnUse")
 
-    const gradientData = [{ offset: "0%", color: "rgb(255,182,193, .1)" },
-    { offset: "50%", color: "white" }]
 
-    linearGradient.current
-      .append("stop")
-      .attr("offset", gradientData[0].offset)
-      .attr("stop-color", gradientData[0].color);
+    linearGradientStop0.current = linearGradient.current
+      .append("stop");
+      
 
-    linearGradient.current
-      .append("stop")
-      .attr("offset", gradientData[1].offset)
-      .attr("stop-color", gradientData[1].color);
+      linearGradientStop1.current = linearGradient.current
+      .append("stop");
 
     area.current = svg.current.append("path");
 
@@ -432,7 +447,6 @@ const Chart = ({
 
     tooltipGroup.current = svg.current.append("g");
 
-
     mouseContainer.current = divContainer
       .append("div")
       .attr('class', 'mouseContainer')
@@ -444,15 +458,12 @@ const Chart = ({
     tooltip.current = mouseContainer.current
       .append('div')
       .attr('class', 'tooltip')
-      // .style('width', `${tooltipWidth}px`)
       .style('opacity', 0)
 
     focusPoint.current = svg.current
       .append("circle")
       .attr("class", "y")
-      .style("fill", "red")
-      .style("stroke", "red")
-      .attr("r", 2.5)
+      .attr("r", 3)
       .style("opacity", "0");
   }
 
@@ -503,12 +514,13 @@ const Chart = ({
       yAxisGrid: yAxisGrid.current,
       fiveYearData,
       isLoading,
-      // mouseContainer: mouseContainer.current,
       bisectLine: bisectLine.current,
       tooltipGroup: tooltipGroup.current,
       tooltip: tooltip.current,
       mouseContainer: mouseContainer.current,
       focusPoint: focusPoint.current,
+      linearGradientStop0: linearGradientStop0.current,
+      linearGradientStop1: linearGradientStop1.current
     })
   }, [yDomain, height, width, selectedTab, fiveYearData, isLoading])
 
