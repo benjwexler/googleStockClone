@@ -84,6 +84,8 @@ const updateChart = ({
   focusPoint,
   linearGradientStop0,
   linearGradientStop1,
+  divContainer,
+  isInGreenToday,
 }) => {
   clippedPath
     .attr("width", width)
@@ -93,6 +95,10 @@ const updateChart = ({
     .style("width", `${width}px`)
     .style("height", `${height + 100}px`);
 
+
+    divContainer
+    .style('min-height', `${height+60}px`)
+    
   if (isLoading) {
     return;
   }
@@ -139,11 +145,11 @@ const updateChart = ({
   }
 
   let domain = [data[0].x, data[data.length - 1].x]
-  let isInGreen = data[0].y <= data[data.length - 1].y;
+  let isInGreen = selectedTab!== 0 ?  data[0].y <= data[data.length - 1].y : isInGreenToday;
 
   let xScale = scaleDiscontinuous(d3.scaleUtc())
     .domain(domain)
-    .range([0, width])
+    .range([0, selectedTab !== 0 ? width : width-50])
 
   if ((data && data.length) && (selectedTab === 7 || selectedTab === 1 || selectedTab === 2 || selectedTab === 3 || selectedTab === 4 || selectedTab === 5 || selectedTab === 6)) {
     const tradingDatesArray = data.map(d => d.x);
@@ -196,7 +202,7 @@ const updateChart = ({
 
   yAxisGrid
     .call(yTicksFunc()
-      .tickSize(-width)
+      .tickSize( selectedTab !== 0 ? -width : -width + 50)
     ).lower()
 
   let ticksArr = []
@@ -352,6 +358,7 @@ const Chart = ({
   isLoading,
   showTooltip,
   setShowTooltip,
+  isInGreenToday,
 }) => {
   const svg = useRef();
   const chart = useRef();
@@ -368,12 +375,15 @@ const Chart = ({
   const tooltip = useRef();
   const mouseContainer = useRef();
   const focusPoint = useRef();
+  const divContainer = useRef();
 
   const [height, setHeight] = useState(600);
   const [width, setWidth] = useState(600);
 
   const setDimensions = () => {
-    const height = document.body.clientHeight - 200 > 300 ? 300 : document.body.clientHeight - 200;
+    const height = document.body.clientHeight > 600 ? 300 : document.body.clientHeight * .4
+    console.log('height', height)
+    // const height = document.body.clientHeight - 200 > 300 ? 100 : document.body.clientHeight - 400;
     const getWidth = () => {
       const clientWidth = document.body.clientWidth;
       if(clientWidth - 80 > 600) {
@@ -400,15 +410,15 @@ const Chart = ({
   }, [])
 
   const onMount = () => {
-    const divContainer = d3.select("#container")
+    divContainer.current = d3.select("#container")
       .append('div')
       .style('display', 'flex')
-      .style('min-height', '400px')
+      // .style('min-height', `${height-10}px`)
       .append('div')
       .attr('class', 'divContainer');
 
-    svg.current = divContainer.append("svg")
-      .attr('transform', `translate(${margin}, ${0})`)
+    svg.current = divContainer.current.append("svg")
+      .attr('transform', `translate(${0}, ${0})`)
       .attr('overflow', 'visible');
 
     linearGradient.current = svg.current.append("linearGradient")
@@ -447,10 +457,10 @@ const Chart = ({
 
     tooltipGroup.current = svg.current.append("g");
 
-    mouseContainer.current = divContainer
+    mouseContainer.current = divContainer.current
       .append("div")
       .attr('class', 'mouseContainer')
-      .style('transform', `translate(${margin}px, ${0}px)`)
+      .style('transform', `translate(${0}px, ${0}px)`)
       .on('mouseover', function () {
         setShowTooltip(true);
       })
@@ -520,7 +530,9 @@ const Chart = ({
       mouseContainer: mouseContainer.current,
       focusPoint: focusPoint.current,
       linearGradientStop0: linearGradientStop0.current,
-      linearGradientStop1: linearGradientStop1.current
+      linearGradientStop1: linearGradientStop1.current,
+      divContainer: divContainer.current,
+      isInGreenToday,
     })
   }, [yDomain, height, width, selectedTab, fiveYearData, isLoading])
 

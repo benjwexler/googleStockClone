@@ -79,11 +79,15 @@ function App() {
     const _fetch = async () => {
       setIsLoading(true);
       const duration = getDuration(selectedTab)
-      const token = 'Tsk_4f28bfa86e2e4385b069966f7dd179a3'
-      const url = `https://sandbox.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&last=10&token=${token}`;
+      const testToken = 'Tsk_4f28bfa86e2e4385b069966f7dd179a3'
+      const token ='pk_34d804bf14b645efbdaf40ff1e393927'
+      const testUrl = `https://sandbox.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&last=10&token=${testToken}`;
+      const url = `https://cloud.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&token=${token}`
+
+      const isRealData = false;
 
       try {
-        const res = await axios.get(url)
+        const res = await axios.get(isRealData ? url : testUrl )
         console.log('res', res.data)
         setQuote(res.data.quote)
         const data = res.data.chart;
@@ -122,13 +126,14 @@ function App() {
           className="select"
         />
       </div>
-      <h3 style={{marginLeft: 10}}>{stock.symbol} - {stock.name}</h3>
+      <h3 className="stockName" style={{marginLeft: 10}}>{stock.symbol} - {stock.name}</h3>
       <h2 
         style={{marginLeft: 10}}
       >
         {formatNumber(quote.latestPrice)} 
-        <span style={{fontSize: 16}}> USD</span>
-        <span style={{fontSize: 16, color: quote.latestPrice - quote.previousClose >= 0 ? colorGreen : 'red'}}> {(quote.latestPrice - quote.previousClose).toFixed(2)} ({getPercentageChange(quote.latestPrice, quote.previousClose)}%)</span>
+        <span style={{fontSize: 16, color: 'rgba(0,0,0,.62)'}}> USD</span>
+        <span style={{fontSize: 16, color: quote.latestPrice - quote.previousClose >= 0 ? colorGreen : 'red'}}> {(quote.latestPrice - quote.previousClose).toFixed(2)} ({getPercentageChange(quote.latestPrice, quote.previousClose)}%) </span>
+        <i style={{fontSize: 14, color: quote.latestPrice - quote.previousClose >= 0 ? colorGreen : 'red'}} className={`fas ${quote.latestPrice - quote.previousClose >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'}`}></i>
       </h2>
       <div id="container">
         <div className="App">
@@ -144,6 +149,7 @@ function App() {
             isLoading={isLoading}
             showTooltip={showTooltip}
             setShowTooltip={setShowTooltip}
+            isInGreenToday={quote.latestPrice - quote.previousClose >= 0}
           />
         </div>
       </div>

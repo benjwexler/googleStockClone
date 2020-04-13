@@ -19,6 +19,7 @@ body {
 .divContainer {
   position: relative;
   margin-top: 40px;
+  margin-left: 40px;
 }
 
 #container {
@@ -106,14 +107,29 @@ body {
   display: flex;
 }
 
-.y {
-  /* transition: all 50ms; */
+.stockName {
+  white-space: nowrap; 
+  overflow: hidden;
+  text-overflow: ellipsis; 
+}
+
+.stockName:hover {
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: initial; 
 }
 
 @media only screen and (max-width: 500px) {
 
-.Mui-selected .MuiTab-wrapper {
-  background: #f5f5f5 !important;
-}
+  #root {
+    border: 0px;
+    border-bottom: 1px solid #dcd9d9;
+  }
+  .Mui-selected .MuiTab-wrapper {
+    background: #f5f5f5 !important;
+  }
+  .divContainer {
+    margin-left: 30px;
+  }
 
 }
