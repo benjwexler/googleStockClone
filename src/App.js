@@ -150,6 +150,7 @@ function App() {
             showTooltip={showTooltip}
             setShowTooltip={setShowTooltip}
             isInGreenToday={quote.latestPrice - quote.previousClose >= 0}
+            previousClose={quote.previousClose}
           />
         </div>
       </div>

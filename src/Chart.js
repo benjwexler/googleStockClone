@@ -11,13 +11,15 @@ const gradientData = [{ offset: "0%", colorGreen: "rgb(15, 157, 88, .65)", color
 
 // let tooltipWidth = 0
 
-const getTooltipTransformX = (_translateX, _tooltipWidth, _width) => {
+const getTooltipTransformX = (_translateX, _tooltipWidth, _width, _selectedTab) => {
   if ((_translateX - (_tooltipWidth / 2)) < 0) {
     return 0
   }
 
-  if ((_translateX) > _width - (_tooltipWidth / 2)) {
-    return _width - _tooltipWidth
+  const tabZerocompensation = _selectedTab === 0 ? 100 : 0
+
+  if ((_translateX + tabZerocompensation) > _width - (_tooltipWidth / 2)) {
+    return _width - _tooltipWidth - tabZerocompensation
   }
 
   return _translateX - (_tooltipWidth / 2);
@@ -86,6 +88,9 @@ const updateChart = ({
   linearGradientStop1,
   divContainer,
   isInGreenToday,
+  previousCloseLine,
+  previousClose,
+  previousCloseText,
 }) => {
   clippedPath
     .attr("width", width)
@@ -280,12 +285,20 @@ const updateChart = ({
     .y1(function (d) { return yScale(d.y); });
 
  
-
   bisectLine
     .attr("y2", height)
     .raise()
 
-  
+    previousCloseLine
+      .attr("x2", width)
+      .attr("y1", yScale(previousClose))
+      .attr("y2", yScale(previousClose))
+      .style("display", selectedTab === 0 ? '' : 'none')
+
+      previousCloseText
+      .text(`Previous Close ${previousClose}`)
+      .style('transform', `translate(${width - 40}px, ${yScale(previousClose)}px)`)
+      .style("display", selectedTab === 0 ? '' : 'none')
 
   mouseContainer
     .attr("width", width)
@@ -293,6 +306,7 @@ const updateChart = ({
     .style("fill", "none")
     .style("pointer-events", "all")
     .on('mousemove', function () {
+      try {
       const mouseX = xScale.invert(d3.mouse(this)[0])
       const date = new Date(mouseX)
 
@@ -323,7 +337,7 @@ const updateChart = ({
       const tooltipWidth = document.querySelector('.tooltip').getBoundingClientRect().width;
 
       tooltip
-        .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
+        .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width, selectedTab)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
 
       focusPoint
         .style("fill", isInGreen ? colorGreen : "red")
@@ -332,6 +346,9 @@ const updateChart = ({
           `translate(${xScale(d.x)},
           ${yScale(d.y)})`)
         .raise();
+    } catch (err) {
+      console.log('err', err)
+    }
     })
 
     linearGradientStop0
@@ -359,6 +376,7 @@ const Chart = ({
   showTooltip,
   setShowTooltip,
   isInGreenToday,
+  previousClose,
 }) => {
   const svg = useRef();
   const chart = useRef();
@@ -376,6 +394,8 @@ const Chart = ({
   const mouseContainer = useRef();
   const focusPoint = useRef();
   const divContainer = useRef();
+  const previousCloseLine = useRef();
+  const previousCloseText = useRef();
 
   const [height, setHeight] = useState(600);
   const [width, setWidth] = useState(600);
@@ -455,6 +475,12 @@ const Chart = ({
       .attr("x2", 0)
       .style("opacity", "0");
 
+      previousCloseLine.current = svg.current
+      .append("line")
+      .attr('class', 'previousCloseLine')
+      .attr("style", "stroke:black; stroke-width:0.5; stroke-dasharray: 2 9;")
+      .attr("x1", 0)
+
     tooltipGroup.current = svg.current.append("g");
 
     mouseContainer.current = divContainer.current
@@ -464,6 +490,10 @@ const Chart = ({
       .on('mouseover', function () {
         setShowTooltip(true);
       })
+
+      previousCloseText.current = mouseContainer.current
+      .append('div')
+      .attr('class', 'previousCloseText')
 
     tooltip.current = mouseContainer.current
       .append('div')
@@ -533,6 +563,9 @@ const Chart = ({
       linearGradientStop1: linearGradientStop1.current,
       divContainer: divContainer.current,
       isInGreenToday,
+      previousCloseLine: previousCloseLine.current,
+      previousClose,
+      previousCloseText: previousCloseText.current,
     })
   }, [yDomain, height, width, selectedTab, fiveYearData, isLoading])
 
