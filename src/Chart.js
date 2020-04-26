@@ -401,7 +401,7 @@ const Chart = ({
   const [width, setWidth] = useState(600);
 
   const setDimensions = () => {
-    const height = document.body.clientHeight > 600 ? 300 : document.body.clientHeight * .4
+    const height = document.body.clientHeight > 812 ? 300 : document.body.clientHeight * .3
     const getWidth = () => {
       const clientWidth = document.body.clientWidth;
       if(clientWidth - 80 > 600) {
