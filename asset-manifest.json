@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/googleStockClone/static/css/main.9462bcb6.chunk.css",
-    "main.js": "/googleStockClone/static/js/main.b0250ba0.chunk.js",
-    "main.js.map": "/googleStockClone/static/js/main.b0250ba0.chunk.js.map",
+    "main.js": "/googleStockClone/static/js/main.c5b26219.chunk.js",
+    "main.js.map": "/googleStockClone/static/js/main.c5b26219.chunk.js.map",
     "runtime-main.js": "/googleStockClone/static/js/runtime-main.eeb24582.js",
     "runtime-main.js.map": "/googleStockClone/static/js/runtime-main.eeb24582.js.map",
     "static/js/2.44058c6a.chunk.js": "/googleStockClone/static/js/2.44058c6a.chunk.js",
     "static/js/2.44058c6a.chunk.js.map": "/googleStockClone/static/js/2.44058c6a.chunk.js.map",
     "index.html": "/googleStockClone/index.html",
-    "precache-manifest.48f1745331dc7e05611e5de1f2eaa296.js": "/googleStockClone/precache-manifest.48f1745331dc7e05611e5de1f2eaa296.js",
+    "precache-manifest.8e28ef93a635705eb3b6ec5c0eec782b.js": "/googleStockClone/precache-manifest.8e28ef93a635705eb3b6ec5c0eec782b.js",
     "service-worker.js": "/googleStockClone/service-worker.js",
     "static/css/main.9462bcb6.chunk.css.map": "/googleStockClone/static/css/main.9462bcb6.chunk.css.map",
     "static/js/2.44058c6a.chunk.js.LICENSE.txt": "/googleStockClone/static/js/2.44058c6a.chunk.js.LICENSE.txt"
@@ -17,6 +17,6 @@
     "static/js/runtime-main.eeb24582.js",
     "static/js/2.44058c6a.chunk.js",
     "static/css/main.9462bcb6.chunk.css",
-    "static/js/main.b0250ba0.chunk.js"
+    "static/js/main.c5b26219.chunk.js"
   ]
 }
