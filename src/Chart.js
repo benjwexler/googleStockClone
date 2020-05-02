@@ -185,7 +185,7 @@ const updateChart = ({
 
   const yScale = d3.scaleLinear()
     .range([height, 0])
-    .domain([minY, maxY])
+    .domain([previousClose && minY < previousClose ? minY : previousClose, previousClose && maxY > previousClose ? maxY : previousClose])
     .nice();
 
   // var yGridTBottomTick = d3.select(".yAxisGrid .tick")
@@ -482,8 +482,7 @@ const Chart = ({
     divContainer.current = d3.select("#container")
       .append('div')
       .style('display', 'flex')
-      .attr('class', 'outerDivContainer')
-      .attr('class', 'noselect')
+      .attr('class', 'outerDivContainer noselect')
       .append('div')
       .attr('class', 'divContainer');
 
@@ -620,7 +619,7 @@ const Chart = ({
       previousClose,
       previousCloseText: previousCloseText.current,
     })
-  }, [yDomain, height, width, selectedTab, fiveYearData, isLoading])
+  }, [yDomain, height, width, selectedTab, fiveYearData, isLoading, previousClose])
 
   return (
     null
