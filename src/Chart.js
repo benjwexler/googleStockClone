@@ -352,7 +352,8 @@ const updateChart = ({
     .on('touchmove', function () {
       try {
         const touch = d3.event.touches[0];
-        const mouseX = xScale.invert(touch.clientX)
+        console.log('touches', d3.event.touches)
+        const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 4))
 
         const bisect = d3.bisector(d => d.x).left
         const i = bisect(data, mouseX, 1);
@@ -482,7 +483,7 @@ const Chart = ({
       .append('div')
       .style('display', 'flex')
       .attr('class', 'outerDivContainer')
-      // .style('min-height', `${height-10}px`)
+      .attr('class', 'noselect')
       .append('div')
       .attr('class', 'divContainer');
 

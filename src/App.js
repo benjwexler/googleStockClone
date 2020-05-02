@@ -85,7 +85,6 @@ function App() {
       const url = `https://cloud.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&token=${token}`
 
       const isRealData = process.env.NODE_ENV === 'production';
-      console.log('isRealData', isRealData, process.env.NODE_ENV)
 
       try {
         const res = await axios.get(isRealData ? url : testUrl )
