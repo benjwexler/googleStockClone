@@ -9,7 +9,7 @@ const colorGreen = 'rgb(15, 157, 88)';
 const gradientData = [{ offset: "0%", colorGreen: "rgb(15, 157, 88, .65)", colorRed: "rgb(255,182,193, .65)" },
 { offset: "50%", color: "rgb(255, 255, 255, 0)" }]
 
-const getTabCompensation = (_selectedTab) => _selectedTab === 0 ? 50 : 0;
+const getTabCompensation = (_selectedTab) => _selectedTab === 0 ? 40 : 0;
 
 const getTooltipTransformX = (_translateX, _tooltipWidth, _width, _selectedTab) => {
   const tabCompensation = getTabCompensation(_selectedTab);
@@ -295,7 +295,7 @@ const updateChart = ({
 
   previousCloseText
     .text(`Previous Close ${previousClose}`)
-    .style('transform', `translate(${width - 40}px, ${yScale(previousClose)}px)`)
+    .style('transform', `translate(${width - 40 + 10}px, ${yScale(previousClose)}px)`)
     .style("display", selectedTab === 0 ? '' : 'none')
 
   mouseContainer
@@ -459,7 +459,7 @@ const Chart = ({
       }
 
       if (clientWidth < 500) {
-        return clientWidth - 60;
+        return clientWidth - 60 - 40;
       }
 
       return clientWidth - 80
@@ -481,6 +481,7 @@ const Chart = ({
     divContainer.current = d3.select("#container")
       .append('div')
       .style('display', 'flex')
+      .attr('class', 'outerDivContainer')
       // .style('min-height', `${height-10}px`)
       .append('div')
       .attr('class', 'divContainer');
