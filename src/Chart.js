@@ -9,22 +9,20 @@ const colorGreen = 'rgb(15, 157, 88)';
 const gradientData = [{ offset: "0%", colorGreen: "rgb(15, 157, 88, .65)", colorRed: "rgb(255,182,193, .65)" },
 { offset: "50%", color: "rgb(255, 255, 255, 0)" }]
 
-// let tooltipWidth = 0
+const getTabCompensation = (_selectedTab) => _selectedTab === 0 ? 50 : 0;
 
 const getTooltipTransformX = (_translateX, _tooltipWidth, _width, _selectedTab) => {
+  const tabCompensation = getTabCompensation(_selectedTab);
   if ((_translateX - (_tooltipWidth / 2)) < 0) {
-    return 0
+    return 0;
   }
 
-  const tabZerocompensation = _selectedTab === 0 ? 100 : 0
-
-  if ((_translateX + tabZerocompensation) > _width - (_tooltipWidth / 2)) {
-    return _width - _tooltipWidth - tabZerocompensation
+  if ((_translateX + tabCompensation) > _width - (_tooltipWidth / 2)) {
+    return _width - _tooltipWidth - tabCompensation;
   }
 
-  return _translateX - (_tooltipWidth / 2);
+  return _translateX - (_tooltipWidth / 2) ;
 }
-
 
 const getAxisXInfo = (tab) => {
   const tabs = {
@@ -154,7 +152,7 @@ const updateChart = ({
 
   let xScale = scaleDiscontinuous(d3.scaleUtc())
     .domain(domain)
-    .range([0, selectedTab !== 0 ? width : width - 50])
+    .range([0, selectedTab !== 0 ? width : width - getTabCompensation(selectedTab)])
 
   if ((data && data.length) && (selectedTab === 7 || selectedTab === 1 || selectedTab === 2 || selectedTab === 3 || selectedTab === 4 || selectedTab === 5 || selectedTab === 6)) {
     const tradingDatesArray = data.map(d => d.x);
@@ -336,6 +334,7 @@ const updateChart = ({
         const tooltipWidth = document.querySelector('.tooltip').getBoundingClientRect().width;
 
         tooltip
+          .style('position', 'absolute')
           .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width, selectedTab)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
 
         focusPoint
