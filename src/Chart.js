@@ -20,7 +20,6 @@ const getTooltipTransformX = (_translateX, _tooltipWidth, _width, _selectedTab) 
   if ((_translateX + tabCompensation) > _width - (_tooltipWidth / 2)) {
     return _width - _tooltipWidth - tabCompensation;
   }
-
   return _translateX - (_tooltipWidth / 2) ;
 }
 
@@ -352,7 +351,6 @@ const updateChart = ({
     .on('touchmove', function () {
       try {
         const touch = d3.event.touches[0];
-        console.log('touches', d3.event.touches)
         const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 4))
 
         const bisect = d3.bisector(d => d.x).left
