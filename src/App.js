@@ -84,7 +84,7 @@ function App() {
       const testUrl = `https://sandbox.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&last=10&token=${testToken}`;
       const url = `https://cloud.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&token=${token}`
 
-      const isRealData = process.env.NODE_ENV === 'production';
+      const isRealData = false && process.env.NODE_ENV === 'production';
 
       try {
         const res = await axios.get(isRealData ? url : testUrl )
