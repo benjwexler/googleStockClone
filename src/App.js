@@ -84,11 +84,11 @@ function App() {
       const testUrl = `https://sandbox.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&last=10&token=${testToken}`;
       const url = `https://cloud.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&token=${token}`
 
-      const isRealData = false;
+      const isRealData = process.env.NODE_ENV === 'production';
+      console.log('isRealData', isRealData, process.env.NODE_ENV)
 
       try {
         const res = await axios.get(isRealData ? url : testUrl )
-        console.log('res', res.data)
         setQuote(res.data.quote)
         const data = res.data.chart;
         const formattedData = data.map(getFormattedDataAction(selectedTab, data))
