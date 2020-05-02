@@ -7,7 +7,7 @@ import moment, { utc } from 'moment';
 const margin = 40;
 const colorGreen = 'rgb(15, 157, 88)';
 const gradientData = [{ offset: "0%", colorGreen: "rgb(15, 157, 88, .65)", colorRed: "rgb(255,182,193, .65)" },
-    { offset: "50%", color: "rgb(255, 255, 255, 0)" }]
+{ offset: "50%", color: "rgb(255, 255, 255, 0)" }]
 
 // let tooltipWidth = 0
 
@@ -101,9 +101,9 @@ const updateChart = ({
     .style("height", `${height + 100}px`);
 
 
-    divContainer
-    .style('min-height', `${height+60}px`)
-    
+  divContainer
+    .style('min-height', `${height + 60}px`)
+
   if (isLoading) {
     return;
   }
@@ -140,7 +140,7 @@ const updateChart = ({
     data = data.filter(date => date.x.day() === mostRecenDayOfWeek);
   }
 
- 
+
   const yTicks = Math.round(height / 50);
   const maxY = Math.max.apply(Math, data.map(function (o) { return o.y; }))
   const minY = Math.min.apply(Math, data.map(function (o) { return o.y; }))
@@ -150,11 +150,11 @@ const updateChart = ({
   }
 
   let domain = [data[0].x, data[data.length - 1].x]
-  let isInGreen = selectedTab!== 0 ?  data[0].y <= data[data.length - 1].y : isInGreenToday;
+  let isInGreen = selectedTab !== 0 ? data[0].y <= data[data.length - 1].y : isInGreenToday;
 
   let xScale = scaleDiscontinuous(d3.scaleUtc())
     .domain(domain)
-    .range([0, selectedTab !== 0 ? width : width-50])
+    .range([0, selectedTab !== 0 ? width : width - 50])
 
   if ((data && data.length) && (selectedTab === 7 || selectedTab === 1 || selectedTab === 2 || selectedTab === 3 || selectedTab === 4 || selectedTab === 5 || selectedTab === 6)) {
     const tradingDatesArray = data.map(d => d.x);
@@ -207,7 +207,7 @@ const updateChart = ({
 
   yAxisGrid
     .call(yTicksFunc()
-      .tickSize( selectedTab !== 0 ? -width : -width + 50)
+      .tickSize(selectedTab !== 0 ? -width : -width + 50)
     ).lower()
 
   let ticksArr = []
@@ -277,28 +277,28 @@ const updateChart = ({
   linearGradient
     .attr("x1", 0).attr("y1", yScale(maxY))
     .attr("x2", 0).attr("y2", yScale(minY))
-    // .raise();
+  // .raise();
 
   var areaData = d3.area()
     .x(function (d) { return xScale(d.x); })
     .y0(height)
     .y1(function (d) { return yScale(d.y); });
 
- 
+
   bisectLine
     .attr("y2", height)
     .raise()
 
-    previousCloseLine
-      .attr("x2", width)
-      .attr("y1", yScale(previousClose))
-      .attr("y2", yScale(previousClose))
-      .style("display", selectedTab === 0 ? '' : 'none')
+  previousCloseLine
+    .attr("x2", width)
+    .attr("y1", yScale(previousClose))
+    .attr("y2", yScale(previousClose))
+    .style("display", selectedTab === 0 ? '' : 'none')
 
-      previousCloseText
-      .text(`Previous Close ${previousClose}`)
-      .style('transform', `translate(${width - 40}px, ${yScale(previousClose)}px)`)
-      .style("display", selectedTab === 0 ? '' : 'none')
+  previousCloseText
+    .text(`Previous Close ${previousClose}`)
+    .style('transform', `translate(${width - 40}px, ${yScale(previousClose)}px)`)
+    .style("display", selectedTab === 0 ? '' : 'none')
 
   mouseContainer
     .attr("width", width)
@@ -307,65 +307,116 @@ const updateChart = ({
     .style("pointer-events", "all")
     .on('mousemove', function () {
       try {
-      const mouseX = xScale.invert(d3.mouse(this)[0])
-      const date = new Date(mouseX)
+        const mouseX = xScale.invert(d3.mouse(this)[0])
 
-      const bisect = d3.bisector(d => d.x).left
-      const i = bisect(data, mouseX, 1);
-      const d0 = data[i - 1];
-      const d1 = data[i];
-      const d = mouseX - d0.x > d1.x - mouseX ? d1 : d0;
+        const bisect = d3.bisector(d => d.x).left
+        const i = bisect(data, mouseX, 1);
+        const d0 = data[i - 1];
+        const d1 = data[i];
+        const d = mouseX - d0.x > d1.x - mouseX ? d1 : d0;
 
-      const point = d
+        const point = d
 
-      const price = point.y;
+        const price = point.y;
 
-      bisectLine
-        .attr("transform", `translate(${xScale(d.x)}, 0)`)
+        bisectLine
+          .attr("transform", `translate(${xScale(d.x)}, 0)`)
 
-      const getTooltipTransformY = (yPoint) => {
-        if (yPoint < 20) {
-          return height - 45
+        const getTooltipTransformY = (yPoint) => {
+          if (yPoint < 20) {
+            return height - 45
+          }
+          return - 15;
         }
-        return - 15;
-      }
 
-      tooltip
-        .text(`${price} USD ${getAxisXInfo(selectedTab).tooltipFormat(d.x)}`)
-        .raise()
+        tooltip
+          .text(`${price} USD ${getAxisXInfo(selectedTab).tooltipFormat(d.x)}`)
+          .raise()
 
-      const tooltipWidth = document.querySelector('.tooltip').getBoundingClientRect().width;
+        const tooltipWidth = document.querySelector('.tooltip').getBoundingClientRect().width;
 
-      tooltip
-        .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width, selectedTab)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
+        tooltip
+          .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width, selectedTab)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
 
-      focusPoint
-        .style("fill", isInGreen ? colorGreen : "red")
-        .style("stroke", isInGreen ? colorGreen : "red")
-        .attr("transform",
-          `translate(${xScale(d.x)},
+        focusPoint
+          .style("fill", isInGreen ? colorGreen : "red")
+          .style("stroke", isInGreen ? colorGreen : "red")
+          .attr("transform",
+            `translate(${xScale(d.x)},
           ${yScale(d.y)})`)
-        .raise();
-    } catch (err) {
-      console.log('err', err)
-    }
+          .raise();
+      } catch (err) {
+        console.log('err', err)
+      }
     })
 
-    linearGradientStop0
-    .attr("offset", gradientData[0].offset)
-      .attr("stop-color", isInGreen ? gradientData[0].colorGreen : gradientData[0].colorRed)
-      .raise();
-  
-    linearGradientStop1
-      .attr("offset", gradientData[1].offset)
-      .attr("stop-color", gradientData[1].color)
-      .raise();
+    .on('touchmove', function () {
+      try {
+        const touch = d3.event.touches[0];
+        const mouseX = xScale.invert(touch.clientX)
 
-      svg.append("path")
-      .data([data])
-      .attr("class", "area")
-      .attr("d", areaData)
-      // .lower();
+        const bisect = d3.bisector(d => d.x).left
+        const i = bisect(data, mouseX, 1);
+        const d0 = data[i - 1];
+        const d1 = data[i];
+        const d = mouseX - d0.x > d1.x - mouseX ? d1 : d0;
+
+        const point = d
+
+        const price = point.y;
+
+        bisectLine
+          .attr("transform", `translate(${xScale(d.x)}, 0)`)
+
+        const getTooltipTransformY = (yPoint) => {
+          if (yPoint < 20) {
+            return height - 45
+          }
+          return - 15;
+        }
+
+        tooltip
+          .text(`${price} USD ${getAxisXInfo(selectedTab).tooltipFormat(d.x)}`)
+          .raise()
+
+        const tooltipWidth = document.querySelector('.tooltip').getBoundingClientRect().width;
+
+        tooltip
+          .style("transform", `translate(${getTooltipTransformX(xScale(d.x), tooltipWidth, width, selectedTab)}px, ${getTooltipTransformY(yScale(d.y))}px)`)
+
+        focusPoint
+          .style("fill", isInGreen ? colorGreen : "red")
+          .style("stroke", isInGreen ? colorGreen : "red")
+          .attr("transform",
+            `translate(${xScale(d.x)},
+          ${yScale(d.y)})`)
+          .raise();
+      } catch (err) {
+        console.log('err', err)
+      }
+    })
+  // .on('touchmove', function (e) {
+
+  //   var touch = d3.event.touches[0];
+  //   console.log('touch', touch)
+
+  // })
+
+  linearGradientStop0
+    .attr("offset", gradientData[0].offset)
+    .attr("stop-color", isInGreen ? gradientData[0].colorGreen : gradientData[0].colorRed)
+    .raise();
+
+  linearGradientStop1
+    .attr("offset", gradientData[1].offset)
+    .attr("stop-color", gradientData[1].color)
+    .raise();
+
+  svg.append("path")
+    .data([data])
+    .attr("class", "area")
+    .attr("d", areaData)
+  // .lower();
 }
 
 const Chart = ({
@@ -404,11 +455,11 @@ const Chart = ({
     const height = document.body.clientHeight > 812 ? 300 : document.body.clientHeight * .3
     const getWidth = () => {
       const clientWidth = document.body.clientWidth;
-      if(clientWidth - 80 > 600) {
+      if (clientWidth - 80 > 600) {
         return 600
       }
 
-      if(clientWidth < 500) {
+      if (clientWidth < 500) {
         return clientWidth - 60;
       }
 
@@ -446,9 +497,9 @@ const Chart = ({
 
     linearGradientStop0.current = linearGradient.current
       .append("stop");
-      
 
-      linearGradientStop1.current = linearGradient.current
+
+    linearGradientStop1.current = linearGradient.current
       .append("stop");
 
     area.current = svg.current.append("path");
@@ -473,7 +524,7 @@ const Chart = ({
       .attr("x2", 0)
       .style("opacity", "0");
 
-      previousCloseLine.current = svg.current
+    previousCloseLine.current = svg.current
       .append("line")
       .attr('class', 'previousCloseLine')
       .attr("style", "stroke:black; stroke-width:0.5; stroke-dasharray: 2 9;")
@@ -488,8 +539,11 @@ const Chart = ({
       .on('mouseover', function () {
         setShowTooltip(true);
       })
+      .on('touchstart', function () {
+        setShowTooltip(true);
+      })
 
-      previousCloseText.current = mouseContainer.current
+    previousCloseText.current = mouseContainer.current
       .append('div')
       .attr('class', 'previousCloseText')
 
