@@ -9,7 +9,7 @@ const colorGreen = 'rgb(15, 157, 88)';
 const gradientData = [{ offset: "0%", colorGreen: "rgb(15, 157, 88, .65)", colorRed: "rgb(255,182,193, .65)" },
 { offset: "50%", color: "rgb(255, 255, 255, 0)" }]
 
-const getTabCompensation = (_selectedTab) => _selectedTab === 0 ? 40 : 0;
+const getTabCompensation = (_selectedTab) => _selectedTab === 0 ? 40 + 20 : 0;
 
 const getTooltipTransformX = (_translateX, _tooltipWidth, _width, _selectedTab) => {
   const tabCompensation = getTabCompensation(_selectedTab);
@@ -209,7 +209,7 @@ const updateChart = ({
 
   yAxisGrid
     .call(yTicksFunc()
-      .tickSize(selectedTab !== 0 ? -width : -width + 50)
+      .tickSize(selectedTab !== 0 ? -width : -width + getTabCompensation(selectedTab))
     ).lower()
 
   let ticksArr = []
@@ -299,7 +299,7 @@ const updateChart = ({
 
   previousCloseText
     .text(`Previous Close ${previousClose}`)
-    .style('transform', `translate(${width - 40 + 10}px, ${yScale(previousClose)}px)`)
+    .style('transform', `translate(${width - 50}px, ${yScale(previousClose)}px)`)
     .style("display", selectedTab === 0 ? '' : 'none')
 
   mouseContainer
@@ -356,10 +356,10 @@ const updateChart = ({
     .on('touchmove', function () {
       try {
         const touch = d3.event.touches[0];
-        const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 4))
+        const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 2))
         // const mouseX = xScale.invert(touch.clientX)
 
-        const bisect = d3.bisector(d => d.x).right
+        const bisect = d3.bisector(d => d.x).left
         const i = bisect(data, mouseX, 1);
         const d0 = data[i - 1];
         const d1 = data[i];
@@ -464,7 +464,7 @@ const Chart = ({
       }
 
       if (clientWidth < 500) {
-        return clientWidth - 60;
+        return clientWidth - 60 - 20;
       }
 
       return clientWidth - 80
