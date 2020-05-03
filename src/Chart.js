@@ -351,7 +351,7 @@ const updateChart = ({
     .on('touchmove', function () {
       try {
         const touch = d3.event.touches[0];
-        const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 4))
+        const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 2))
 
         const bisect = d3.bisector(d => d.x).left
         const i = bisect(data, mouseX, 1);
@@ -617,7 +617,7 @@ const Chart = ({
       previousClose,
       previousCloseText: previousCloseText.current,
     })
-  }, [yDomain, height, width, selectedTab, fiveYearData, isLoading, previousClose])
+  }, [yDomain, height, width, selectedTab, fiveYearData, isLoading ])
 
   return (
     null
