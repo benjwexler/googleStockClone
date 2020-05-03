@@ -14,12 +14,17 @@ const getTabCompensation = (_selectedTab) => _selectedTab === 0 ? 40 : 0;
 const getTooltipTransformX = (_translateX, _tooltipWidth, _width, _selectedTab) => {
   const tabCompensation = getTabCompensation(_selectedTab);
   if ((_translateX - (_tooltipWidth / 2)) < 0) {
+    // console.log('_translateX', _translateX)
+    // console.log('_tooltipWidth', _tooltipWidth)
+    // console.log(0)
     return 0;
   }
 
   if ((_translateX + tabCompensation) > _width - (_tooltipWidth / 2)) {
+    // console.log(1)
     return _width - _tooltipWidth - tabCompensation;
   }
+  // console.log(2)
   return _translateX - (_tooltipWidth / 2) ;
 }
 
@@ -351,9 +356,10 @@ const updateChart = ({
     .on('touchmove', function () {
       try {
         const touch = d3.event.touches[0];
-        const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 2))
+        const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 4))
+        // const mouseX = xScale.invert(touch.clientX)
 
-        const bisect = d3.bisector(d => d.x).left
+        const bisect = d3.bisector(d => d.x).right
         const i = bisect(data, mouseX, 1);
         const d0 = data[i - 1];
         const d1 = data[i];
@@ -458,7 +464,7 @@ const Chart = ({
       }
 
       if (clientWidth < 500) {
-        return clientWidth - 60 - 40;
+        return clientWidth - 60;
       }
 
       return clientWidth - 80
