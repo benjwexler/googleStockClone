@@ -93,6 +93,7 @@ const updateChart = ({
   previousCloseLine,
   previousClose,
   previousCloseText,
+  setShowTooltip
 }) => {
   clippedPath
     .attr("width", width)
@@ -352,10 +353,17 @@ const updateChart = ({
         console.log('err', err)
       }
     })
-
+    .on('touchstart', function () {
+      d3.select("body").style('overflow', 'hidden')
+        setShowTooltip(true)
+    })
+    .on('touchend', function () {
+      d3.select("body").style('overflow', 'scroll')
+    })
     .on('touchmove', function () {
       try {
         const touch = d3.event.touches[0];
+        // console.log('touch', touch)
         const mouseX = xScale.invert(touch.clientX - (touch.radiusX * 2))
         // const mouseX = xScale.invert(touch.clientX)
 
@@ -399,12 +407,6 @@ const updateChart = ({
         console.log('err', err)
       }
     })
-  // .on('touchmove', function (e) {
-
-  //   var touch = d3.event.touches[0];
-  //   console.log('touch', touch)
-
-  // })
 
   linearGradientStop0
     .attr("offset", gradientData[0].offset)
@@ -546,6 +548,7 @@ const Chart = ({
       .on('touchstart', function () {
         setShowTooltip(true);
       })
+   
 
     previousCloseText.current = mouseContainer.current
       .append('div')
@@ -622,6 +625,7 @@ const Chart = ({
       previousCloseLine: previousCloseLine.current,
       previousClose,
       previousCloseText: previousCloseText.current,
+      setShowTooltip,
     })
   }, [yDomain, height, width, selectedTab, fiveYearData, isLoading ])
 
