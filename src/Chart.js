@@ -356,10 +356,10 @@ const updateChart = ({
     .on('touchstart', function () {
       d3.select("body").style('overflow', 'hidden')
         setShowTooltip(true)
-    })
+    }, {passive: true})
     .on('touchend', function () {
       d3.select("body").style('overflow', 'scroll')
-    })
+    }, {passive: true})
     .on('touchmove', function () {
       try {
         const touch = d3.event.touches[0];
@@ -406,7 +406,7 @@ const updateChart = ({
       } catch (err) {
         console.log('err', err)
       }
-    })
+    }, {passive: true})
 
   linearGradientStop0
     .attr("offset", gradientData[0].offset)
@@ -547,7 +547,7 @@ const Chart = ({
       })
       .on('touchstart', function () {
         setShowTooltip(true);
-      })
+      }, {passive: true})
    
 
     previousCloseText.current = mouseContainer.current
