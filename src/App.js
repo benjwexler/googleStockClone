@@ -79,17 +79,22 @@ function App() {
     const _fetch = async () => {
       setIsLoading(true);
       const duration = getDuration(selectedTab)
-      const testToken = 'Tsk_4f28bfa86e2e4385b069966f7dd179a3'
-      const token ='pk_34d804bf14b645efbdaf40ff1e393927'
-      const testUrl = `https://sandbox.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&last=10&token=${testToken}`;
-      const url = `https://cloud.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&token=${token}`
-
-      const isRealData = false && process.env.NODE_ENV === 'production';
+      const testToken = process.env.REACT_APP_TEST_TOKEN
+      const token = process.env.REACT_APP_TOKEN
+      const testUrl = `https://sandbox.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&last=10&token=${testToken}&sort=asc`;
+      const url = `https://cloud.iexapis.com/stable/stock/${stock.symbol}/batch?types=quote,chart&range=${duration}&token=${token}&sort=asc`
+      // const isRealData = false && process.env.NODE_ENV === 'production';
+      const isRealData = true;
 
       try {
         const res = await axios.get(isRealData ? url : testUrl )
         setQuote(res.data.quote)
-        const data = res.data.chart;
+        let data = res.data.chart;
+        // don't need to sort for 1 day or 5 day data
+        // if(!isRealData && selectedTab > 1) {
+        //   data = data.slice().sort((a, b) => moment(a.date) - moment(b.date))
+        // }
+        
         const formattedData = data.map(getFormattedDataAction(selectedTab, data))
         setFiveYearData(formattedData)
       } catch (err) {
