@@ -12,6 +12,7 @@ import { stripDiacritics } from './diacritics.js'
 import { createFilter } from './filters';
 import Async, { makeAsyncSelect } from 'react-select/async';
 import WindowedSelect from "react-windowed-select";
+import Div100vh from 'react-div-100vh'
 
 const colorGreen = 'rgb(15, 157, 88)';
 
@@ -87,7 +88,7 @@ function App() {
       const isRealData = true;
 
       try {
-        const res = await axios.get(isRealData ? url : testUrl )
+        const res = await axios.get(isRealData && (selectedTab > 1) ? url : testUrl )
         setQuote(res.data.quote)
         let data = res.data.chart;
         // don't need to sort for 1 day or 5 day data
@@ -113,7 +114,8 @@ function App() {
   const resultLimit = 1000
   let i = 0
   return (
-
+    <Div100vh>
+    <div style={{border: '1px solid #dcd9d9'}}>
     <ThemeProvider theme={theme}>
       <div>
         <WindowedSelect
@@ -160,7 +162,8 @@ function App() {
       </div>
 
     </ThemeProvider>
-
+    </div>
+    </Div100vh>
   );
 }
 
